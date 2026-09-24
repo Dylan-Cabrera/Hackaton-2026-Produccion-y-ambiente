@@ -34,6 +34,7 @@ export default function ProducerProfileCard({ producer }) {
           <p className="text-muted-foreground">Pagos: {producer.paymentMethods.join(", ")}</p>
         )}
         {producer.address && <p className="text-muted-foreground">{producer.address}</p>}
+        {producer.bio && <p className="pt-1 text-foreground">{producer.bio}</p>}
       </CardContent>
     </Card>
   );

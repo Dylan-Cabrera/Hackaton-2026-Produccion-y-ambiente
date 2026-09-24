@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { getProfile, loginProducer, logoutProducer, registerProducer } from "@/lib/api";
+import { getProfile, loginProducer, logoutProducer, registerProducer, updateProducer } from "@/lib/api";
 
 const AuthContext = createContext(null);
 
@@ -37,8 +37,14 @@ export function AuthProvider({ children }) {
     setStatus("anonymous");
   }
 
+  async function updateProfile(data) {
+    const producer = await updateProducer(user.id, data);
+    setUser(producer);
+    return producer;
+  }
+
   return (
-    <AuthContext.Provider value={{ user, status, register, login, logout }}>
+    <AuthContext.Provider value={{ user, status, register, login, logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,27 +1,47 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import CatalogFeed from "@/components/CatalogFeed";
 import ProducerProfileCard from "@/components/ProducerProfileCard";
+import ProducerProfileEditForm from "@/components/ProducerProfileEditForm";
 import ProductCreateModal from "@/components/ProductCreateModal";
 import ProductDetailView from "@/components/ProductDetailView";
-import { getProducer, getProducerProducts } from "@/lib/api";
-
-// Demo sin login: se trabaja con un productor fijo hasta que exista sesión real.
-const DEMO_PRODUCER_ID = 1;
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
+import { getProducerProducts } from "@/lib/api";
 
 export default function MyProductsPage() {
-  const [producer, setProducer] = useState(null);
+  const { user, status } = useAuth();
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [selected, setSelected] = useState(null);
+  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
     document.title = "Mis productos y excedentes · Mercado Km 0";
-    getProducer(DEMO_PRODUCER_ID).then((p) => setProducer(p ?? null));
-    getProducerProducts(DEMO_PRODUCER_ID).then(setProducts);
   }, []);
+
+  // Sin sesión no hay nada que mostrar: se redirige a login (HU-01: "Redirige a login").
+  useEffect(() => {
+    if (status === "anonymous") {
+      navigate("/login");
+    }
+  }, [status, navigate]);
+
+  useEffect(() => {
+    if (user) getProducerProducts(user.id).then(setProducts);
+  }, [user]);
+
+  if (status === "loading" || status === "anonymous") {
+    return (
+      <main className="mx-auto max-w-5xl px-4 py-8">
+        <p className="text-muted-foreground">Cargando…</p>
+      </main>
+    );
+  }
 
   const items = products.map((product) => ({
     product,
-    producer: producer ?? undefined,
+    producer: user,
     distanceKm: null,
   }));
 
@@ -35,13 +55,26 @@ export default function MyProductsPage() {
           </p>
         </div>
         <ProductCreateModal
-          producerId={DEMO_PRODUCER_ID}
-          defaultCategory={producer?.category}
+          producerId={user.id}
+          defaultCategory={user.category}
           onCreated={(p) => setProducts((prev) => [p, ...prev])}
         />
       </div>
 
-      {producer && <ProducerProfileCard producer={producer} />}
+      {editing ? (
+        <ProducerProfileEditForm
+          producer={user}
+          onSaved={() => setEditing(false)}
+          onCancel={() => setEditing(false)}
+        />
+      ) : (
+        <div className="space-y-3">
+          <ProducerProfileCard producer={user} />
+          <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+            Editar perfil
+          </Button>
+        </div>
+      )}
 
       <CatalogFeed items={items} onSelect={setSelected} />
 
