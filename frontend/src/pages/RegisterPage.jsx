@@ -15,7 +15,7 @@ export default function RegisterPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Registrá tu emprendimiento</h1>
           <p className="mt-1 text-muted-foreground">
-            Sin contraseñas ni verificaciones: solo lo necesario para que te encuentren.
+            Creá tu cuenta de productor: con eso ya podés cargar tus productos y que te encuentren.
           </p>
         </div>
         <ProducerRegisterForm onCreated={setProducer} />

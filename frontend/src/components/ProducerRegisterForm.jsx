@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -10,20 +11,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createProducer } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
+import { useUserLocation } from "@/hooks/useUserLocation";
 import { CATEGORIES, DELIVERY_OPTIONS, PAYMENT_METHODS } from "@/lib/constants";
 
-// Formulario de una sola pantalla: el criterio es completarlo en menos de un
-// minuto desde el celular, por eso no hay pasos, contraseña ni verificación.
 export default function ProducerRegisterForm({ onCreated }) {
+  const { register } = useAuth();
+  const { location, status: locationStatus, request: requestLocation } = useUserLocation();
+
   const [businessName, setBusinessName] = useState("");
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [address, setAddress] = useState("");
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [deliveryOptions, setDeliveryOptions] = useState([]);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [saving, setSaving] = useState(false);
 
   const toggle = (list, value, setter) =>
@@ -31,24 +37,38 @@ export default function ProducerRegisterForm({ onCreated }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!businessName.trim() || !name.trim() || !category || !phone.trim()) {
-      setError("Completá emprendimiento, nombre, rubro y teléfono para continuar.");
+    setError("");
+    setFieldErrors({});
+
+    if (!location) {
+      setError("Necesitamos tu ubicación para mostrarte en el mapa. Tocá \"Usar mi ubicación\".");
       return;
     }
-    setError("");
+
     setSaving(true);
     try {
-      // Sin coordinates: todavía no se pide geolocalización en el alta.
-      const producer = await createProducer({
+      const producer = await register({
         businessName: businessName.trim(),
         name: name.trim(),
         category,
         phone: phone.trim(),
-        address: address.trim(),
+        email: email.trim(),
+        password,
+        location: {
+          address: address.trim(),
+          coordinates: [location.lng, location.lat],
+        },
         paymentMethods,
         deliveryOptions,
       });
       onCreated(producer);
+    } catch (err) {
+      setError(err.message);
+      const byField = {};
+      for (const fe of err.fieldErrors ?? []) {
+        if (fe.field) byField[fe.field] = fe.message;
+      }
+      setFieldErrors(byField);
     } finally {
       setSaving(false);
     }
@@ -64,6 +84,9 @@ export default function ProducerRegisterForm({ onCreated }) {
           onChange={(e) => setBusinessName(e.target.value)}
           placeholder="Chacra La Esperanza"
         />
+        {fieldErrors.businessName && (
+          <p className="text-sm text-destructive">{fieldErrors.businessName}</p>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -74,6 +97,7 @@ export default function ProducerRegisterForm({ onCreated }) {
           onChange={(e) => setName(e.target.value)}
           placeholder="Marta Gimenez"
         />
+        {fieldErrors.name && <p className="text-sm text-destructive">{fieldErrors.name}</p>}
       </div>
 
       <div className="space-y-2">
@@ -90,6 +114,7 @@ export default function ProducerRegisterForm({ onCreated }) {
             ))}
           </SelectContent>
         </Select>
+        {fieldErrors.category && <p className="text-sm text-destructive">{fieldErrors.category}</p>}
       </div>
 
       <div className="space-y-2">
@@ -102,16 +127,61 @@ export default function ProducerRegisterForm({ onCreated }) {
           onChange={(e) => setPhone(e.target.value)}
           placeholder="5493704000001"
         />
+        {fieldErrors.phone && <p className="text-sm text-destructive">{fieldErrors.phone}</p>}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="address">Dirección o barrio</Label>
+        <Label htmlFor="email">Email *</Label>
+        <Input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="vos@ejemplo.com"
+        />
+        {fieldErrors.email && <p className="text-sm text-destructive">{fieldErrors.email}</p>}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="password">Contraseña *</Label>
+        <Input
+          id="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Mínimo 6 caracteres"
+        />
+        {fieldErrors.password && <p className="text-sm text-destructive">{fieldErrors.password}</p>}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="address">Dirección o barrio *</Label>
         <Input
           id="address"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           placeholder="Colonia Pastoril, Formosa"
         />
+        {fieldErrors["location.address"] && (
+          <p className="text-sm text-destructive">{fieldErrors["location.address"]}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Button type="button" variant="outline" onClick={requestLocation} className="gap-2">
+          <MapPin className="size-4" />
+          {locationStatus === "loading" ? "Buscando ubicación…" : "Usar mi ubicación"}
+        </Button>
+        {locationStatus === "granted" && location && (
+          <p className="text-sm text-muted-foreground">
+            Ubicación lista ({location.lat.toFixed(4)}, {location.lng.toFixed(4)})
+          </p>
+        )}
+        {locationStatus === "denied" && (
+          <p className="text-sm text-destructive">
+            No pudimos acceder a tu ubicación. Activá el permiso e intentá de nuevo.
+          </p>
+        )}
       </div>
 
       <fieldset className="space-y-3">

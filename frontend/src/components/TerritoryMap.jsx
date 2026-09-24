@@ -4,8 +4,8 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet.heat";
 import "./TerritoryMap.css";
+import { getProducers } from "@/lib/api";
 
-const PRODUCERS_URL = "http://localhost:3000/api/producers";
 const DEMAND_URL = "http://localhost:3000/api/products/demand-heatmap";
 
 // Colores por categoría, para diferenciar los pines en el mapa
@@ -72,11 +72,7 @@ export default function TerritoryMap() {
   const [demandSearched, setDemandSearched] = useState(false);
 
   useEffect(() => {
-    fetch(PRODUCERS_URL)
-      .then((res) => {
-        if (!res.ok) throw new Error("La respuesta del servidor no fue exitosa");
-        return res.json();
-      })
+    getProducers()
       .then((data) => {
         setProducers(data);
         setLoading(false);
