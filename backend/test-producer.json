@@ -1,0 +1,22 @@
+{
+  "name": "Juan Pérez",
+  "businessName": "Huerta Orgánica del Valle",
+  "category": "Frutihortícola",
+  "phone": "5493704123456",
+  "email": "juan@huertagarcia.com",
+  "password": "SecurePass123",
+  "location": {
+    "address": "Ruta 49km, Formosa, Argentina",
+    "coordinates": [-60.7129, -31.6109]
+  },
+  "paymentMethods": [
+    "Efectivo",
+    "Transferencia bancaria",
+    "Billetera virtual"
+  ],
+  "deliveryOptions": [
+    "Retiro en huerta",
+    "Entrega a domicilio"
+  ],
+  "bio": "Producimos frutas y verduras orgánicas certificadas con métodos tradicionales sostenibles."
+}
