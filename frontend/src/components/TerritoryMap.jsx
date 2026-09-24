@@ -39,8 +39,8 @@ function HeatmapLayer({ points }) {
     if (!points.length) return;
 
     const heatLayer = L.heatLayer(points, {
-      radius: 35,
-      blur: 25,
+      radius: 60,
+      blur: 40,
       maxZoom: 17,
     }).addTo(map);
 
