@@ -1,67 +1,35 @@
 import { WGS84_SRID } from '../constants/catalog.constants.js';
 import {
-  CreateProducerInput,
-  ProducerPersistenceAttributes,
-  ProducerProfilePersistenceAttributes,
   ProducerRecord,
   PublicProducerProfile,
-  UpdateProducerInput,
   UpdateProducerPersistenceAttributes,
-  UserPersistenceAttributes
+  UpdateProducerProfileInput
 } from '../interfaces/producer.types.js';
 
-// Responsabilidad única: traducir entre las distintas formas de un productor
-// (entrada de la API, filas de `users` + `producer_profiles`, respuesta pública).
+// Responsabilidad única: traducir entre las distintas formas del perfil de productor
+// (entrada de PUT /api/producers/profile, fila de `users` + `producer_profiles`, respuesta pública).
 export class ProducerMapper {
-  static toPersistence(input: CreateProducerInput, passwordHash: string): ProducerPersistenceAttributes {
-    return {
-      user: {
-        role: 'PRODUCER',
-        name: input.name,
-        email: input.email,
-        password: passwordHash,
-        phone: input.phone,
-        // Pendiente (plan 0.5): completar cuando exista el catálogo de localidades
-        locality: null,
-        coordinates: {
-          type: 'Point',
-          coordinates: input.location.coordinates,
-          // Necesario para que PostGIS asigne el SRID de la columna
-          crs: { type: 'name', properties: { name: `EPSG:${WGS84_SRID}` } }
-        }
-      },
-      profile: {
-        businessName: input.businessName,
-        category: input.category,
-        address: input.location.address,
-        paymentMethods: input.paymentMethods ?? [],
-        deliveryOptions: input.deliveryOptions ?? [],
-        bio: input.bio ?? null
-      }
-    };
-  }
-
-  static toUpdatePersistence(input: UpdateProducerInput): UpdateProducerPersistenceAttributes {
-    const user: Partial<UserPersistenceAttributes> = {};
-    const profile: Partial<ProducerProfilePersistenceAttributes> = {};
+  static toUpdatePersistence(input: UpdateProducerProfileInput): UpdateProducerPersistenceAttributes {
+    const user: NonNullable<UpdateProducerPersistenceAttributes['user']> = {};
+    const profile: NonNullable<UpdateProducerPersistenceAttributes['profile']> = {};
 
     if (input.name !== undefined) user.name = input.name;
     if (input.phone !== undefined) user.phone = input.phone;
+    if (input.locality !== undefined) user.locality = input.locality;
+    if (input.coordinates !== undefined) {
+      user.coordinates = {
+        type: 'Point',
+        coordinates: input.coordinates,
+        crs: { type: 'name', properties: { name: `EPSG:${WGS84_SRID}` } }
+      };
+    }
 
     if (input.businessName !== undefined) profile.businessName = input.businessName;
     if (input.category !== undefined) profile.category = input.category;
+    if (input.address !== undefined) profile.address = input.address;
     if (input.paymentMethods !== undefined) profile.paymentMethods = input.paymentMethods;
     if (input.deliveryOptions !== undefined) profile.deliveryOptions = input.deliveryOptions;
     if (input.bio !== undefined) profile.bio = input.bio;
-
-    if (input.location !== undefined) {
-      user.coordinates = {
-        type: 'Point',
-        coordinates: input.location.coordinates,
-        crs: { type: 'name', properties: { name: `EPSG:${WGS84_SRID}` } }
-      };
-      profile.address = input.location.address;
-    }
 
     const result: UpdateProducerPersistenceAttributes = {};
     if (Object.keys(user).length > 0) result.user = user;
@@ -69,18 +37,17 @@ export class ProducerMapper {
     return result;
   }
 
-  static toPublic(record: ProducerRecord, { includeEmail = false } = {}): PublicProducerProfile {
+  static toPublic(record: ProducerRecord): PublicProducerProfile {
     return {
       id: record.id,
       name: record.name,
       businessName: record.producerProfile.businessName,
       category: record.producerProfile.category,
-      phone: record.phone,
-      ...(includeEmail && { email: record.email }),
+      // El registro de un PRODUCER siempre exige phone y locality (con centroide de respaldo)
+      phone: record.phone!,
       location: {
-        address: record.producerProfile.address,
-        // PostGIS devuelve también "crs" en el GeoJSON; se descarta para no filtrar detalles internos
-        coordinates: { type: 'Point', coordinates: record.coordinates.coordinates }
+        address: record.producerProfile.address ?? '',
+        coordinates: record.coordinates!
       },
       paymentMethods: record.producerProfile.paymentMethods,
       deliveryOptions: record.producerProfile.deliveryOptions,

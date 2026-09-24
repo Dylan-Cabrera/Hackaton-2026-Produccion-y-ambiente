@@ -1,0 +1,11 @@
+{
+  "role": "CONSUMER",
+  "name": "María Gómez",
+  "email": "maria@example.com",
+  "password": "SecurePass123",
+  "accountType": "INSTITUCION",
+  "organizationName": "Comedor Los Girasoles",
+  "institutionType": "Comedor",
+  "phone": "5493704999999",
+  "locality": "Formosa"
+}

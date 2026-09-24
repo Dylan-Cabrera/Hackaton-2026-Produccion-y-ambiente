@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Script para probar el endpoint de creación de productor
+# Script para probar el registro de un productor
 # Uso: ./test-producer.sh o bash test-producer.sh
 
-BASE_URL="http://localhost:3000/api/producers"
+BASE_URL="http://localhost:3000/api/auth/register"
 
 echo "📤 Enviando solicitud POST a $BASE_URL..."
 echo ""

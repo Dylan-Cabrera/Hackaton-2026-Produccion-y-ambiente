@@ -1,42 +1,5 @@
 import { Category } from '../constants/catalog.constants.js';
-import { Role } from '../constants/user.constants.js';
-
-export type CoordinatesTuple = [number, number]; // [longitud, latitud]
-
-export interface GeoJSONPoint {
-  type: 'Point';
-  coordinates: CoordinatesTuple;
-}
-
-export interface LocationInput {
-  address: string;
-  coordinates: CoordinatesTuple;
-}
-
-// Datos crudos recibidos al registrar un productor
-export interface CreateProducerInput {
-  name: string;
-  businessName: string;
-  category: Category;
-  phone: string;
-  email: string;
-  password: string;
-  location: LocationInput;
-  paymentMethods?: string[];
-  deliveryOptions?: string[];
-  bio?: string | null;
-}
-
-// Filas que van a la tabla `users` (password ya hasheado)
-export interface UserPersistenceAttributes {
-  role: Role;
-  name: string;
-  email: string;
-  password: string;
-  phone: string | null;
-  locality: string | null;
-  coordinates: (GeoJSONPoint & { crs?: unknown }) | null;
-}
+import { GeoJSONPoint, CoordinatesTuple } from './geo.types.js';
 
 // Filas que van a la tabla `producer_profiles`
 export interface ProducerProfilePersistenceAttributes {
@@ -48,14 +11,13 @@ export interface ProducerProfilePersistenceAttributes {
   bio: string | null;
 }
 
-// Lo que arma el mapper para crear un productor: dos tablas, una sola transacción
-export interface ProducerPersistenceAttributes {
-  user: UserPersistenceAttributes;
-  profile: ProducerProfilePersistenceAttributes;
-}
-
 export interface UpdateProducerPersistenceAttributes {
-  user?: Partial<UserPersistenceAttributes>;
+  user?: Partial<{
+    name: string;
+    phone: string;
+    locality: string;
+    coordinates: GeoJSONPoint & { crs?: unknown };
+  }>;
   profile?: Partial<ProducerProfilePersistenceAttributes>;
 }
 
@@ -63,29 +25,26 @@ export interface UpdateProducerPersistenceAttributes {
 export interface ProducerRecord {
   id: number;
   name: string;
-  email: string;
-  password: string;
-  phone: string;
-  coordinates: GeoJSONPoint;
+  phone: string | null;
+  coordinates: GeoJSONPoint | null;
   createdAt: Date;
   producerProfile: {
     businessName: string;
     category: Category;
-    address: string;
+    address: string | null;
     paymentMethods: string[];
     deliveryOptions: string[];
     bio: string | null;
   };
 }
 
-// Forma pública (nunca incluye el password)
+// Forma pública del perfil de productor (GET /api/producers/:id). No cambia entre versiones.
 export interface PublicProducerProfile {
   id: number;
   name: string;
   businessName: string;
   category: Category;
   phone: string;
-  email?: string;
   location: { address: string; coordinates: GeoJSONPoint };
   paymentMethods: string[];
   deliveryOptions: string[];
@@ -93,24 +52,17 @@ export interface PublicProducerProfile {
   createdAt: Date;
 }
 
-// Datos parciales para actualizar un productor (todos los campos opcionales)
-export interface UpdateProducerInput {
+// Body de PUT /api/producers/profile: datos del emprendimiento + campos de cuenta,
+// editados en una sola transacción.
+export interface UpdateProducerProfileInput {
   name?: string;
+  phone?: string;
+  locality?: string;
+  coordinates?: CoordinatesTuple;
   businessName?: string;
   category?: Category;
-  phone?: string;
-  location?: LocationInput;
+  address?: string;
   paymentMethods?: string[];
   deliveryOptions?: string[];
   bio?: string | null;
-}
-
-export interface LoginInput {
-  email: string;
-  password: string;
-}
-
-export interface AuthResult {
-  producer: PublicProducerProfile;
-  token: string;
 }

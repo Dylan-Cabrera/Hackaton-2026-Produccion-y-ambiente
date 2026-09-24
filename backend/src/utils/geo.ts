@@ -1,4 +1,5 @@
 import { LOCALITIES, LocalityName } from '../constants/localities.constants.js';
+import { GeoJSONPoint } from '../interfaces/geo.types.js';
 
 const EARTH_RADIUS_KM = 6371;
 const toRadians = (degrees: number): number => (degrees * Math.PI) / 180;
@@ -36,3 +37,7 @@ export const localityCentroid = (name: string): { lat: number; lng: number } | n
   const locality = LOCALITIES.find((entry) => entry.name === name);
   return locality ? { lat: locality.lat, lng: locality.lng } : null;
 };
+
+// PostGIS devuelve también "crs" en el GeoJSON; se descarta para no filtrar detalles internos
+export const toPlainPoint = (point: GeoJSONPoint | null | undefined): GeoJSONPoint | null =>
+  point ? { type: 'Point', coordinates: point.coordinates } : null;

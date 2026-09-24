@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.routes.js';
+import userRoutes from './routes/user.routes.js';
 import producerRoutes from './routes/producer.routes.js';
 import metaRoutes from './routes/meta.routes.js';
 import { errorHandler } from './middlewares/error-handler.js';
@@ -33,6 +34,9 @@ export const createApp = () => {
 
   // Rutas de autenticación
   app.use('/api/auth', authRoutes);
+
+  // Datos de cuenta propios (cualquier rol)
+  app.use('/api/users', userRoutes);
 
   // Rutas de productores
   app.use('/api/producers', producerRoutes);
