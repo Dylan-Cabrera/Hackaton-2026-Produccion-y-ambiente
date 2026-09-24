@@ -37,6 +37,9 @@ export default function SiteNav() {
             <NavLink to="/mis-productos" className={linkClass}>
               Mis productos
             </NavLink>
+            <NavLink to="/mi-demanda" className={linkClass}>
+              Mi demanda
+            </NavLink>
             <span className="px-2 text-sm text-muted-foreground">{user?.businessName}</span>
             <Button variant="outline" size="sm" onClick={handleLogout}>
               Salir

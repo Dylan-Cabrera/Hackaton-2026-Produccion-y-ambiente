@@ -154,6 +154,11 @@ export async function updateNeedStatus(id, status) {
   return request(`/api/needs/${id}`, { method: "PATCH", body: JSON.stringify({ status }) });
 }
 
+// Resumen de clics de contacto del productor logueado (dashboard de demanda).
+export async function getMyContactClicksSummary() {
+  return request("/api/interactions/contact-click/mine");
+}
+
 // Métrica de contacto: se dispara en paralelo, no se espera la respuesta.
 // Se traga cualquier error a propósito: un fallo acá nunca debe frenar el
 // contacto real por WhatsApp.
