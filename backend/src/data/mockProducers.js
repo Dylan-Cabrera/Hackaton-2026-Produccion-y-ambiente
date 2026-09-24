@@ -1,0 +1,58 @@
+const mockProducers = [
+  {
+    id: 1,
+    name: "Marta Gómez",
+    businessName: "Dulces caseros Doña Marta",
+    category: "Conservas/Dulces",
+    phone: "5493704000001",
+    address: "Barrio San Miguel",
+    coordinates: { type: "Point", coordinates: [-58.1731, -26.1849] },
+  },
+  {
+    id: 2,
+    name: "Roberto Ayala",
+    businessName: "Miel del Oeste",
+    category: "Apicultura",
+    phone: "5493704000002",
+    address: "Zona rural, ruta 81",
+    coordinates: { type: "Point", coordinates: [-58.1745, -26.1855] },
+  },
+  {
+    id: 3,
+    name: "José Sosa",
+    businessName: "Verdulería Don José",
+    category: "Frutihortícola",
+    phone: "5493704000003",
+    address: "Barrio Namqom",
+    coordinates: { type: "Point", coordinates: [-58.1720, -26.1860] },
+  },
+  {
+    id: 4,
+    name: "Comunidad Wichí",
+    businessName: "Tejidos Wichí",
+    category: "Artesanías/Textil",
+    phone: "5493704000004",
+    address: "Laguna Naineck",
+    coordinates: { type: "Point", coordinates: [-58.1800, -26.1900] },
+  },
+  {
+    id: 5,
+    name: "Elena Rojas",
+    businessName: "Cerámica Naineck",
+    category: "Artesanías/Textil",
+    phone: "5493704000005",
+    address: "Laguna Naineck",
+    coordinates: { type: "Point", coordinates: [-58.1795, -26.1905] },
+  },
+  {
+    id: 6,
+    name: "Pedro Leiva",
+    businessName: "Herrería Central",
+    category: "Otros",
+    phone: "5493704000006",
+    address: "Barrio Obrero",
+    coordinates: { type: "Point", coordinates: [-58.1650, -26.1780] },
+  },
+];
+
+module.exports = mockProducers;
