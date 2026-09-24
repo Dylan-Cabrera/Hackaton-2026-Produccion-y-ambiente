@@ -41,4 +41,18 @@ function getUnmetDemand(req, res) {
   res.json(ranking);
 }
 
-module.exports = { searchProducts, getUnmetDemand };
+function getDemandPoints(req, res) {
+  const query = (req.query.q || "").trim().toLowerCase();
+
+  if (!query) {
+    return res.status(400).json({ error: "Falta el parámetro de búsqueda 'q'" });
+  }
+
+  const points = searchMetrics
+    .filter((entry) => entry.term === query)
+    .map((entry) => [entry.lat, entry.lng]);
+
+  res.json({ query, points });
+}
+
+module.exports = { searchProducts, getUnmetDemand, getDemandPoints };
