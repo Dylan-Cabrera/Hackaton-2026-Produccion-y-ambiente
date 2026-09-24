@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet.heat";
+import "./TerritoryMap.css";
 
 const API_URL = "http://localhost:3000/api/producers";
 
@@ -25,9 +26,9 @@ function toLatLng(coordinates) {
 function createIcon(color) {
   return L.divIcon({
     className: "",
-    html: `<div style="background:${color}; width:16px; height:16px; border-radius:50%; border:2px solid white; box-shadow: 0 0 2px rgba(0,0,0,0.4);"></div>`,
-    iconSize: [16, 16],
-    iconAnchor: [8, 8],
+    html: `<div class="producer-marker" style="background:${color}; width:22px; height:22px;"></div>`,
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
   });
 }
 
@@ -52,6 +53,19 @@ function HeatmapLayer({ points }) {
   return null;
 }
 
+function MapLegend() {
+  return (
+    <div className="map-legend">
+      {Object.entries(CATEGORY_COLORS).map(([category, color]) => (
+        <span key={category} className="legend-item">
+          <span className="legend-dot" style={{ background: color }} />
+          {category}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export default function TerritoryMap() {
   const [producers, setProducers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -73,37 +87,54 @@ export default function TerritoryMap() {
       });
   }, []);
 
-  if (loading) return <p>Cargando productores...</p>;
-  if (error) return <p>Error al cargar los datos: {error}</p>;
+  if (loading) {
+    return (
+      <div className="map-card">
+        <div className="map-status">Cargando productores...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="map-card">
+        <div className="map-status is-error">Error al cargar los datos: {error}</div>
+      </div>
+    );
+  }
 
   const heatPoints = producers.map((p) => toLatLng(p.coordinates));
 
   return (
-    <MapContainer
-      center={[-26.1849, -58.1731]}
-      zoom={14}
-      style={{ height: "500px", width: "100%" }}
-    >
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      />
+    <div className="map-card">
+      <MapLegend />
 
-      <HeatmapLayer points={heatPoints} />
+      <MapContainer center={[-26.1849, -58.1731]} zoom={14}>
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        />
 
-      {producers.map((producer) => (
-        <Marker
-          key={producer.id}
-          position={toLatLng(producer.coordinates)}
-          icon={createIcon(CATEGORY_COLORS[producer.category] || "#5F5E5A")}
-        >
-          <Popup>
-            <strong>{producer.businessName}</strong>
-            <br />
-            {producer.category}
-          </Popup>
-        </Marker>
-      ))}
-    </MapContainer>
+        <HeatmapLayer points={heatPoints} />
+
+        {producers.map((producer) => (
+          <Marker
+            key={producer.id}
+            position={toLatLng(producer.coordinates)}
+            icon={createIcon(CATEGORY_COLORS[producer.category] || "#5F5E5A")}
+          >
+            <Popup className="producer-popup">
+              <div
+                className="popup-content"
+                style={{ "--popup-color": CATEGORY_COLORS[producer.category] || "#5F5E5A" }}
+              >
+                <strong>{producer.businessName}</strong>
+                <span>{producer.category}</span>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+    </div>
   );
 }

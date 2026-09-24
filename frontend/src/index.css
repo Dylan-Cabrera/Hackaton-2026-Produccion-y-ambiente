@@ -1,3 +1,23 @@
+:root {
+  --color-bg: #f2f5ef;
+  --color-card: #ffffff;
+  --color-primary: #2f6b3a;
+  --color-primary-dark: #234f2a;
+  --color-text: #1f2a1f;
+  --color-muted: #667066;
+  --color-border: #e2e7de;
+  --radius-lg: 16px;
+  --radius-md: 10px;
+  --shadow-card: 0 12px 32px rgba(31, 42, 31, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
 }
