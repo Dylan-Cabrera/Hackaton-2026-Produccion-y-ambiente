@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import './models/index.js'; // Registra las asociaciones antes de sincronizar la base
 import { connectDatabase } from './config/database.js';
 import { createApp } from './app.js';
 

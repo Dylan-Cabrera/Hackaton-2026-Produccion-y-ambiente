@@ -2,74 +2,89 @@ import { WGS84_SRID } from '../constants/producer.constants.js';
 import {
   CreateProducerInput,
   ProducerPersistenceAttributes,
+  ProducerProfilePersistenceAttributes,
   ProducerRecord,
   PublicProducerProfile,
-  UpdateProducerInput
+  UpdateProducerInput,
+  UpdateProducerPersistenceAttributes,
+  UserPersistenceAttributes
 } from '../interfaces/producer.types.js';
 
 // Responsabilidad única: traducir entre las distintas formas de un productor
-// (entrada de la API, fila de la base de datos, respuesta pública).
+// (entrada de la API, filas de `users` + `producer_profiles`, respuesta pública).
 export class ProducerMapper {
   static toPersistence(input: CreateProducerInput, passwordHash: string): ProducerPersistenceAttributes {
     return {
-      name: input.name,
-      businessName: input.businessName,
-      category: input.category,
-      phone: input.phone,
-      email: input.email,
-      password: passwordHash,
-      address: input.location.address,
-      coordinates: {
-        type: 'Point',
-        coordinates: input.location.coordinates,
-        // Necesario para que PostGIS asigne el SRID de la columna
-        crs: { type: 'name', properties: { name: `EPSG:${WGS84_SRID}` } }
+      user: {
+        role: 'PRODUCER',
+        name: input.name,
+        email: input.email,
+        password: passwordHash,
+        phone: input.phone,
+        // Pendiente (plan 0.5): completar cuando exista el catálogo de localidades
+        locality: null,
+        coordinates: {
+          type: 'Point',
+          coordinates: input.location.coordinates,
+          // Necesario para que PostGIS asigne el SRID de la columna
+          crs: { type: 'name', properties: { name: `EPSG:${WGS84_SRID}` } }
+        }
       },
-      paymentMethods: input.paymentMethods ?? [],
-      deliveryOptions: input.deliveryOptions ?? [],
-      bio: input.bio ?? null
+      profile: {
+        businessName: input.businessName,
+        category: input.category,
+        address: input.location.address,
+        paymentMethods: input.paymentMethods ?? [],
+        deliveryOptions: input.deliveryOptions ?? [],
+        bio: input.bio ?? null
+      }
     };
   }
 
-  static toUpdatePersistence(input: UpdateProducerInput): Partial<ProducerPersistenceAttributes> {
-    const data: Partial<ProducerPersistenceAttributes> = {};
+  static toUpdatePersistence(input: UpdateProducerInput): UpdateProducerPersistenceAttributes {
+    const user: Partial<UserPersistenceAttributes> = {};
+    const profile: Partial<ProducerProfilePersistenceAttributes> = {};
 
-    if (input.name !== undefined) data.name = input.name;
-    if (input.businessName !== undefined) data.businessName = input.businessName;
-    if (input.category !== undefined) data.category = input.category;
-    if (input.phone !== undefined) data.phone = input.phone;
-    if (input.paymentMethods !== undefined) data.paymentMethods = input.paymentMethods;
-    if (input.deliveryOptions !== undefined) data.deliveryOptions = input.deliveryOptions;
-    if (input.bio !== undefined) data.bio = input.bio;
+    if (input.name !== undefined) user.name = input.name;
+    if (input.phone !== undefined) user.phone = input.phone;
+
+    if (input.businessName !== undefined) profile.businessName = input.businessName;
+    if (input.category !== undefined) profile.category = input.category;
+    if (input.paymentMethods !== undefined) profile.paymentMethods = input.paymentMethods;
+    if (input.deliveryOptions !== undefined) profile.deliveryOptions = input.deliveryOptions;
+    if (input.bio !== undefined) profile.bio = input.bio;
 
     if (input.location !== undefined) {
-      data.address = input.location.address;
-      data.coordinates = {
+      user.coordinates = {
         type: 'Point',
         coordinates: input.location.coordinates,
         crs: { type: 'name', properties: { name: `EPSG:${WGS84_SRID}` } }
       };
+      profile.address = input.location.address;
     }
 
-    return data;
+    const result: UpdateProducerPersistenceAttributes = {};
+    if (Object.keys(user).length > 0) result.user = user;
+    if (Object.keys(profile).length > 0) result.profile = profile;
+    return result;
   }
 
   static toPublic(record: ProducerRecord, { includeEmail = false } = {}): PublicProducerProfile {
     return {
       id: record.id,
       name: record.name,
-      businessName: record.businessName,
-      category: record.category,
+      businessName: record.producerProfile.businessName,
+      category: record.producerProfile.category,
       phone: record.phone,
       ...(includeEmail && { email: record.email }),
       location: {
-        address: record.address,
+        address: record.producerProfile.address,
         // PostGIS devuelve también "crs" en el GeoJSON; se descarta para no filtrar detalles internos
         coordinates: { type: 'Point', coordinates: record.coordinates.coordinates }
       },
-      paymentMethods: record.paymentMethods,
-      deliveryOptions: record.deliveryOptions,
-      bio: record.bio,
+      paymentMethods: record.producerProfile.paymentMethods,
+      deliveryOptions: record.producerProfile.deliveryOptions,
+      bio: record.producerProfile.bio,
       createdAt: record.createdAt
     };
   }

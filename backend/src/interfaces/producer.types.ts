@@ -1,4 +1,5 @@
 import { ProducerCategory } from '../constants/producer.constants.js';
+import { Role } from '../constants/user.constants.js';
 
 export type CoordinatesTuple = [number, number]; // [longitud, latitud]
 
@@ -26,36 +27,55 @@ export interface CreateProducerInput {
   bio?: string | null;
 }
 
-// Forma exacta que espera la tabla (password ya hasheado)
-export interface ProducerPersistenceAttributes {
+// Filas que van a la tabla `users` (password ya hasheado)
+export interface UserPersistenceAttributes {
+  role: Role;
   name: string;
-  businessName: string;
-  category: ProducerCategory;
-  phone: string;
   email: string;
   password: string;
-  address: string;
-  coordinates: GeoJSONPoint & { crs?: unknown };
+  phone: string | null;
+  locality: string | null;
+  coordinates: (GeoJSONPoint & { crs?: unknown }) | null;
+}
+
+// Filas que van a la tabla `producer_profiles`
+export interface ProducerProfilePersistenceAttributes {
+  businessName: string;
+  category: ProducerCategory;
+  address: string | null;
   paymentMethods: string[];
   deliveryOptions: string[];
   bio: string | null;
 }
 
-// Registro completo tal como vive en la base de datos
+// Lo que arma el mapper para crear un productor: dos tablas, una sola transacción
+export interface ProducerPersistenceAttributes {
+  user: UserPersistenceAttributes;
+  profile: ProducerProfilePersistenceAttributes;
+}
+
+export interface UpdateProducerPersistenceAttributes {
+  user?: Partial<UserPersistenceAttributes>;
+  profile?: Partial<ProducerProfilePersistenceAttributes>;
+}
+
+// Registro plano tal como lo arma el repositorio (join de `users` + `producer_profiles`)
 export interface ProducerRecord {
   id: number;
   name: string;
-  businessName: string;
-  category: ProducerCategory;
-  phone: string;
   email: string;
   password: string;
-  address: string;
+  phone: string;
   coordinates: GeoJSONPoint;
-  paymentMethods: string[];
-  deliveryOptions: string[];
-  bio: string | null;
   createdAt: Date;
+  producerProfile: {
+    businessName: string;
+    category: ProducerCategory;
+    address: string;
+    paymentMethods: string[];
+    deliveryOptions: string[];
+    bio: string | null;
+  };
 }
 
 // Forma pública (nunca incluye el password)
