@@ -1,0 +1,31 @@
+import { Link, NavLink } from "react-router-dom";
+import { Sprout } from "lucide-react";
+
+const linkClass = ({ isActive }) =>
+  "rounded-md px-3 py-2 text-sm font-medium transition-colors " +
+  (isActive ? "text-primary" : "text-muted-foreground hover:text-foreground");
+
+export default function SiteNav() {
+  return (
+    <header className="border-b border-border bg-card">
+      <nav className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-4 py-3">
+        <Link to="/" className="mr-auto flex items-center gap-2 font-bold">
+          <Sprout className="size-5 text-primary" />
+          Mercado Km 0
+        </Link>
+        <NavLink to="/" end className={linkClass}>
+          Catálogo
+        </NavLink>
+        <NavLink to="/mapa" className={linkClass}>
+          Mapa
+        </NavLink>
+        <NavLink to="/registro" className={linkClass}>
+          Soy productor
+        </NavLink>
+        <NavLink to="/mis-productos" className={linkClass}>
+          Mis productos
+        </NavLink>
+      </nav>
+    </header>
+  );
+}

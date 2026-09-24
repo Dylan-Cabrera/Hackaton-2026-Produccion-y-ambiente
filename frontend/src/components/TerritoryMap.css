@@ -1,8 +1,8 @@
 .map-card {
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
+  background: var(--map-color-card);
+  border: 1px solid var(--map-color-border);
+  border-radius: var(--map-radius-lg);
+  box-shadow: var(--map-shadow-card);
   overflow: hidden;
 }
 
@@ -14,18 +14,18 @@
 
 .mode-button {
   padding: 0.45rem 1.1rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
+  border-radius: var(--map-radius-md);
+  border: 1px solid var(--map-color-border);
   background: #fff;
-  color: var(--color-text);
+  color: var(--map-color-text);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
 }
 
 .mode-button.active {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
+  background: var(--map-color-primary);
+  border-color: var(--map-color-primary);
   color: #fff;
 }
 
@@ -35,7 +35,7 @@
   gap: 0.4rem 0.6rem;
   align-items: center;
   padding: 0.9rem 1.25rem;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--map-color-border);
 }
 
 .legend-item {
@@ -43,11 +43,11 @@
   align-items: center;
   gap: 0.45rem;
   font-size: 0.85rem;
-  color: var(--color-text);
+  color: var(--map-color-text);
 }
 
 .legend-button {
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--map-color-border);
   background: #fff;
   border-radius: 999px;
   padding: 0.3rem 0.75rem;
@@ -55,8 +55,8 @@
 }
 
 .legend-button.active {
-  background: var(--color-text);
-  border-color: var(--color-text);
+  background: var(--map-color-text);
+  border-color: var(--map-color-text);
   color: #fff;
 }
 
@@ -68,27 +68,27 @@
   display: flex;
   gap: 0.5rem;
   padding: 0.9rem 1.25rem;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--map-color-border);
 }
 
 .demand-form input {
   flex: 1;
   padding: 0.55rem 0.75rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--map-color-border);
+  border-radius: var(--map-radius-md);
   font-size: 0.9rem;
 }
 
 .demand-form input:focus {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--map-color-primary);
   outline-offset: 1px;
 }
 
 .demand-form button {
   padding: 0.55rem 1.2rem;
   border: none;
-  border-radius: var(--radius-md);
-  background: var(--color-primary);
+  border-radius: var(--map-radius-md);
+  background: var(--map-color-primary);
   color: #fff;
   font-size: 0.9rem;
   font-weight: 600;
@@ -96,15 +96,15 @@
 }
 
 .demand-form button:hover {
-  background: var(--color-primary-dark);
+  background: var(--map-color-primary-dark);
 }
 
 .demand-empty {
   margin: 0;
   padding: 0.75rem 1.25rem;
   font-size: 0.85rem;
-  color: var(--color-muted);
-  border-bottom: 1px solid var(--color-border);
+  color: var(--map-color-muted);
+  border-bottom: 1px solid var(--map-color-border);
 }
 
 .legend-dot {
@@ -129,24 +129,24 @@
 }
 
 .producer-popup .leaflet-popup-content-wrapper {
-  border-radius: var(--radius-md);
+  border-radius: var(--map-radius-md);
   box-shadow: 0 10px 24px rgba(31, 42, 31, 0.18);
 }
 
 .popup-content {
-  border-left: 4px solid var(--popup-color, var(--color-primary));
+  border-left: 4px solid var(--popup-color, var(--map-color-primary));
   padding-left: 0.6rem;
 }
 
 .popup-content strong {
   display: block;
   font-size: 0.95rem;
-  color: var(--color-text);
+  color: var(--map-color-text);
 }
 
 .popup-content span {
   font-size: 0.82rem;
-  color: var(--color-muted);
+  color: var(--map-color-muted);
 }
 
 .map-status {
@@ -155,7 +155,7 @@
   justify-content: center;
   height: 520px;
   font-size: 0.95rem;
-  color: var(--color-muted);
+  color: var(--map-color-muted);
 }
 
 .map-status.is-error {

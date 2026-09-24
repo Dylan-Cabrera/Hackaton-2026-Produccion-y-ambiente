@@ -1,8 +1,8 @@
 .demand-panel {
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
+  background: var(--map-color-card);
+  border: 1px solid var(--map-color-border);
+  border-radius: var(--map-radius-lg);
+  box-shadow: var(--map-shadow-card);
   padding: 1.25rem 1.5rem 1.5rem;
   margin-top: 1.5rem;
 }
@@ -10,13 +10,13 @@
 .demand-panel h2 {
   font-size: 1.1rem;
   margin: 0 0 0.9rem;
-  color: var(--color-primary-dark);
+  color: var(--map-color-primary-dark);
 }
 
 .demand-panel h3 {
   font-size: 0.95rem;
   margin: 1.2rem 0 0.6rem;
-  color: var(--color-text);
+  color: var(--map-color-text);
 }
 
 .search-form {
@@ -27,21 +27,21 @@
 .search-form input {
   flex: 1;
   padding: 0.55rem 0.75rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--map-color-border);
+  border-radius: var(--map-radius-md);
   font-size: 0.9rem;
 }
 
 .search-form input:focus {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--map-color-primary);
   outline-offset: 1px;
 }
 
 .search-form button {
   padding: 0.55rem 1.2rem;
   border: none;
-  border-radius: var(--radius-md);
-  background: var(--color-primary);
+  border-radius: var(--map-radius-md);
+  background: var(--map-color-primary);
   color: #fff;
   font-size: 0.9rem;
   font-weight: 600;
@@ -49,7 +49,7 @@
 }
 
 .search-form button:hover {
-  background: var(--color-primary-dark);
+  background: var(--map-color-primary-dark);
 }
 
 .search-result {
@@ -59,7 +59,7 @@
 .search-result p {
   margin: 0 0 0.5rem;
   font-size: 0.9rem;
-  color: var(--color-text);
+  color: var(--map-color-text);
 }
 
 .search-result p.no-results {
@@ -67,13 +67,15 @@
 }
 
 .search-result ul {
+  list-style: disc;
   margin: 0;
   padding-left: 1.2rem;
   font-size: 0.88rem;
-  color: var(--color-muted);
+  color: var(--map-color-muted);
 }
 
 .ranking-list {
+  list-style: decimal;
   margin: 0;
   padding-left: 1.2rem;
   font-size: 0.9rem;
@@ -84,6 +86,6 @@
 }
 
 .demand-panel .muted {
-  color: var(--color-muted);
+  color: var(--map-color-muted);
   font-size: 0.88rem;
 }

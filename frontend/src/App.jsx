@@ -1,21 +1,22 @@
-import TerritoryMap from "./components/TerritoryMap";
-import UnmetDemandPanel from "./components/UnmetDemandPanel";
-import "./App.css";
+import { Route, Routes } from "react-router-dom";
+import SiteNav from "@/components/SiteNav";
+import CatalogPage from "@/pages/CatalogPage";
+import RegisterPage from "@/pages/RegisterPage";
+import MyProductsPage from "@/pages/MyProductsPage";
+import MapPage from "@/pages/MapPage";
+import NotFoundPage from "@/pages/NotFoundPage";
 
-function App() {
+export default function App() {
   return (
-    <div className="page">
-      <header className="page-header">
-        <h1>Mapa de oferta y vacíos productivos</h1>
-        <p>Ubicación de productores locales y zonas con poca cobertura</p>
-      </header>
-
-      <main>
-        <TerritoryMap />
-        <UnmetDemandPanel />
-      </main>
-    </div>
+    <>
+      <SiteNav />
+      <Routes>
+        <Route path="/" element={<CatalogPage />} />
+        <Route path="/mapa" element={<MapPage />} />
+        <Route path="/registro" element={<RegisterPage />} />
+        <Route path="/mis-productos" element={<MyProductsPage />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </>
   );
 }
-
-export default App;

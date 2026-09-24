@@ -12,11 +12,11 @@
 .page-header h1 {
   font-size: 1.65rem;
   margin: 0 0 0.4rem;
-  color: var(--color-primary-dark);
+  color: var(--map-color-primary-dark);
 }
 
 .page-header p {
   margin: 0;
-  color: var(--color-muted);
+  color: var(--map-color-muted);
   font-size: 0.95rem;
 }
