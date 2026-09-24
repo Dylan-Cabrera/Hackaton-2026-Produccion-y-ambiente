@@ -3,6 +3,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.routes.js';
 import producerRoutes from './routes/producer.routes.js';
+import metaRoutes from './routes/meta.routes.js';
 import { errorHandler } from './middlewares/error-handler.js';
 
 export const createApp = () => {
@@ -35,6 +36,9 @@ export const createApp = () => {
 
   // Rutas de productores
   app.use('/api/producers', producerRoutes);
+
+  // Catálogos estáticos para el frontend
+  app.use('/api/meta', metaRoutes);
 
   // Manejo de errores centralizado
   app.use(errorHandler);

@@ -1,6 +1,9 @@
+import { Role } from '../constants/user.constants.js';
+
 export interface TokenPayload {
   id: number;
   email: string;
+  role: Role;
 }
 
 // Abstracción de la emisión/verificación de tokens de sesión.

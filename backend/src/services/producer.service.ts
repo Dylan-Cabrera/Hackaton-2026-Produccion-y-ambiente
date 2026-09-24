@@ -9,7 +9,7 @@ import {
   UpdateProducerInput
 } from '../interfaces/producer.types.js';
 import { ProducerMapper } from '../mappers/producer.mapper.js';
-import { ConflictError, NotFoundError, UnauthorizedError } from '../errors/app-error.js';
+import { ConflictError, ForbiddenError, NotFoundError } from '../errors/app-error.js';
 
 // Caso de uso "registrar productor". Depende únicamente de abstracciones (DIP),
 // lo que permite testearlo con dobles de prueba sin tocar Sequelize, bcrypt ni jwt.
@@ -34,7 +34,7 @@ export class ProducerService implements IProducerService {
     );
 
     // 3. Iniciar sesión automáticamente tras el registro
-    const token = this.tokenService.sign({ id: record.id, email: record.email });
+    const token = this.tokenService.sign({ id: record.id, email: record.email, role: 'PRODUCER' });
 
     return { producer: ProducerMapper.toPublic(record, { includeEmail: true }), token };
   }
@@ -55,7 +55,7 @@ export class ProducerService implements IProducerService {
       throw new NotFoundError('Productor no encontrado');
     }
     if (record.id !== requesterId) {
-      throw new UnauthorizedError('No tiene permisos para modificar este productor');
+      throw new ForbiddenError('No tiene permisos para modificar este productor');
     }
 
     const updated = await this.producerRepository.update(id, ProducerMapper.toUpdatePersistence(input));
@@ -72,7 +72,7 @@ export class ProducerService implements IProducerService {
       throw new NotFoundError('Productor no encontrado');
     }
     if (record.id !== requesterId) {
-      throw new UnauthorizedError('No tiene permisos para eliminar este productor');
+      throw new ForbiddenError('No tiene permisos para eliminar este productor');
     }
 
     await this.producerRepository.delete(id);

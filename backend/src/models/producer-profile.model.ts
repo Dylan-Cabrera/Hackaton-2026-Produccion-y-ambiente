@@ -1,6 +1,6 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database.js';
-import { PRODUCER_CATEGORIES } from '../constants/producer.constants.js';
+import { CATEGORIES } from '../constants/catalog.constants.js';
 
 // Datos del emprendimiento. Relación 1 a 1 con `users`: PK = FK = userId (ver models/index.ts).
 const ProducerProfile = sequelize.define(
@@ -17,7 +17,7 @@ const ProducerProfile = sequelize.define(
       allowNull: false
     },
     category: {
-      type: DataTypes.ENUM(...PRODUCER_CATEGORIES),
+      type: DataTypes.ENUM(...CATEGORIES),
       allowNull: false
     },
     // Dirección o referencia de barrio/colonia para la entrega

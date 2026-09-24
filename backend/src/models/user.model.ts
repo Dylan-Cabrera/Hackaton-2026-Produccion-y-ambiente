@@ -1,7 +1,7 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database.js';
-import { WGS84_SRID } from '../constants/producer.constants.js';
-import { ROLES, ACCOUNT_TYPES, INSTITUTION_TYPES } from '../constants/user.constants.js';
+import { WGS84_SRID, INSTITUTION_TYPES } from '../constants/catalog.constants.js';
+import { ROLES, ACCOUNT_TYPES } from '../constants/user.constants.js';
 
 // Datos de cuenta comunes a los tres roles (CONSUMER, PRODUCER, ADMIN).
 // El perfil de emprendimiento vive aparte, en `producer_profiles` (ver models/index.ts).
@@ -35,7 +35,7 @@ const User = sequelize.define(
       type: DataTypes.STRING(15),
       allowNull: true
     },
-    // Pendiente: validar contra el catálogo de localidades (plan 0.5, todavía no implementado)
+    // Validada en los validators contra LOCALITIES (src/constants/localities.constants.ts)
     locality: {
       type: DataTypes.STRING(80),
       allowNull: true

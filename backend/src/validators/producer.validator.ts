@@ -1,5 +1,5 @@
 import { body, param } from 'express-validator';
-import { PRODUCER_CATEGORIES } from '../constants/producer.constants.js';
+import { CATEGORIES } from '../constants/catalog.constants.js';
 
 const stringArray = (field: string, label: string) => [
   body(field)
@@ -30,8 +30,8 @@ export const registerProducerValidator = [
     .withMessage('El nombre comercial no puede superar los 100 caracteres'),
 
   body('category')
-    .isIn(PRODUCER_CATEGORIES)
-    .withMessage(`La categoría debe ser una de: ${PRODUCER_CATEGORIES.join(', ')}`),
+    .isIn(CATEGORIES)
+    .withMessage(`La categoría debe ser una de: ${CATEGORIES.join(', ')}`),
 
   body('phone')
     .notEmpty()
@@ -114,8 +114,8 @@ export const updateProducerValidator = [
 
   body('category')
     .optional()
-    .isIn(PRODUCER_CATEGORIES)
-    .withMessage(`La categoría debe ser una de: ${PRODUCER_CATEGORIES.join(', ')}`),
+    .isIn(CATEGORIES)
+    .withMessage(`La categoría debe ser una de: ${CATEGORIES.join(', ')}`),
 
   body('phone')
     .optional()

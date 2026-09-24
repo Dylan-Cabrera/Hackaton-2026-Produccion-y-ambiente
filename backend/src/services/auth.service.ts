@@ -32,7 +32,7 @@ export class AuthService implements IAuthService {
     }
 
     // 3. Generar token de sesión
-    const token = this.tokenService.sign({ id: record.id, email: record.email });
+    const token = this.tokenService.sign({ id: record.id, email: record.email, role: 'PRODUCER' });
 
     return { producer: ProducerMapper.toPublic(record, { includeEmail: true }), token };
   }

@@ -1,4 +1,4 @@
-import { WGS84_SRID } from '../constants/producer.constants.js';
+import { WGS84_SRID } from '../constants/catalog.constants.js';
 import {
   CreateProducerInput,
   ProducerPersistenceAttributes,

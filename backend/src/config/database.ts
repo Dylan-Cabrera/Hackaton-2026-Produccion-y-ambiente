@@ -22,6 +22,9 @@ export const connectDatabase = async (): Promise<void> => {
     // Habilita PostGIS para columnas GEOMETRY e índices espaciales
     await sequelize.query('CREATE EXTENSION IF NOT EXISTS postgis;');
 
+    // Habilita búsquedas de texto que ignoran acentos (ej: "mandioca" encuentra "Mandióca")
+    await sequelize.query('CREATE EXTENSION IF NOT EXISTS unaccent;');
+
     // Sincroniza los modelos con la base de datos (crea las tablas automáticamente)
     await sequelize.sync();
     console.log('Tablas sincronizadas con la base de datos');

@@ -1,4 +1,4 @@
-import { ProducerCategory } from '../constants/producer.constants.js';
+import { Category } from '../constants/catalog.constants.js';
 import { Role } from '../constants/user.constants.js';
 
 export type CoordinatesTuple = [number, number]; // [longitud, latitud]
@@ -17,7 +17,7 @@ export interface LocationInput {
 export interface CreateProducerInput {
   name: string;
   businessName: string;
-  category: ProducerCategory;
+  category: Category;
   phone: string;
   email: string;
   password: string;
@@ -41,7 +41,7 @@ export interface UserPersistenceAttributes {
 // Filas que van a la tabla `producer_profiles`
 export interface ProducerProfilePersistenceAttributes {
   businessName: string;
-  category: ProducerCategory;
+  category: Category;
   address: string | null;
   paymentMethods: string[];
   deliveryOptions: string[];
@@ -70,7 +70,7 @@ export interface ProducerRecord {
   createdAt: Date;
   producerProfile: {
     businessName: string;
-    category: ProducerCategory;
+    category: Category;
     address: string;
     paymentMethods: string[];
     deliveryOptions: string[];
@@ -83,7 +83,7 @@ export interface PublicProducerProfile {
   id: number;
   name: string;
   businessName: string;
-  category: ProducerCategory;
+  category: Category;
   phone: string;
   email?: string;
   location: { address: string; coordinates: GeoJSONPoint };
@@ -97,7 +97,7 @@ export interface PublicProducerProfile {
 export interface UpdateProducerInput {
   name?: string;
   businessName?: string;
-  category?: ProducerCategory;
+  category?: Category;
   phone?: string;
   location?: LocationInput;
   paymentMethods?: string[];
