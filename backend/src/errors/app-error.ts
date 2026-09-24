@@ -30,3 +30,11 @@ export class ForbiddenError extends AppError {
     super(message, 403);
   }
 }
+
+// Para reglas de negocio que el validator de campos no puede expresar
+// (ej: offerPrice debe ser menor que price)
+export class ValidationError extends AppError {
+  constructor(message: string) {
+    super(message, 400);
+  }
+}

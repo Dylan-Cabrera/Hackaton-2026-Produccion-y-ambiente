@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
 import producerRoutes from './routes/producer.routes.js';
+import productRoutes from './routes/product.routes.js';
 import metaRoutes from './routes/meta.routes.js';
 import { errorHandler } from './middlewares/error-handler.js';
 
@@ -40,6 +41,9 @@ export const createApp = () => {
 
   // Rutas de productores
   app.use('/api/producers', producerRoutes);
+
+  // Rutas de productos
+  app.use('/api/products', productRoutes);
 
   // Catálogos estáticos para el frontend
   app.use('/api/meta', metaRoutes);

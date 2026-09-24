@@ -1,0 +1,36 @@
+import { Router } from 'express';
+import { ProductController } from '../controllers/product.controller.js';
+import {
+  createProductValidator,
+  updateProductValidator,
+  productIdValidator
+} from '../validators/product.validator.js';
+import { validateRequest } from '../middlewares/validate-request.js';
+import { authenticateToken, requireRole } from '../middlewares/auth.middleware.js';
+
+const router = Router();
+const productController = new ProductController();
+
+router.post(
+  '/',
+  authenticateToken,
+  requireRole('PRODUCER'),
+  createProductValidator,
+  validateRequest,
+  productController.create
+);
+
+// Declarada antes de '/:id' para que Express no la confunda con un id
+router.get('/mine', authenticateToken, requireRole('PRODUCER'), productController.listMine);
+
+router.patch(
+  '/:id',
+  authenticateToken,
+  requireRole('PRODUCER'),
+  productIdValidator,
+  updateProductValidator,
+  validateRequest,
+  productController.update
+);
+
+export default router;
