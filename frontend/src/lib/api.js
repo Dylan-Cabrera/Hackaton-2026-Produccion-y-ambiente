@@ -130,7 +130,8 @@ export async function updateProduct(id, data) {
 }
 
 // Métrica de contacto: se dispara en paralelo, no se espera la respuesta.
-// Todavía no existe el endpoint en el backend real, así que no rompe si falla.
+// Se traga cualquier error a propósito: un fallo acá nunca debe frenar el
+// contacto real por WhatsApp.
 export function trackContactClick(payload) {
   fetch(`${API_BASE}/api/interactions/contact-click`, {
     method: "POST",
