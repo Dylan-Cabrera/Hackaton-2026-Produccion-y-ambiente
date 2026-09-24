@@ -1,8 +1,5 @@
-import { MOCK_PRODUCTS } from "./mockData";
-
 // Backend real (Express + Sequelize + PostGIS) corriendo en local, con auth por
-// cookie HTTP-Only. Todavía no tiene endpoints de "productos": esa parte sigue
-// en mock hasta que se sume al backend.
+// cookie HTTP-Only.
 export const API_BASE = "http://localhost:3000";
 
 // Envuelve fetch: manda cookies de sesión, tira un Error con status/fieldErrors
@@ -104,26 +101,32 @@ export async function deleteProducer(id) {
   return request(`/api/producers/${id}`, { method: "DELETE" });
 }
 
-// --- Productos (todavía mock: el backend real no tiene esta entidad) ---
-
-const localProducts = [...MOCK_PRODUCTS];
-let nextId = 1000;
+// --- Productos ---
 
 export async function getProducts(params) {
-  return localProducts.filter(
-    (p) =>
-      (!params?.category || p.category === params.category) && (!params?.isOffer || p.isOffer),
-  );
+  const qs = new URLSearchParams();
+  if (params?.category) qs.set("category", params.category);
+  if (params?.isOffer) qs.set("isOffer", "true");
+  const suffix = qs.toString() ? `?${qs}` : "";
+  return request(`/api/products${suffix}`);
 }
 
 export async function getProducerProducts(producerId) {
-  return localProducts.filter((p) => p.producerId === producerId);
+  return request(`/api/producers/${producerId}/products`);
 }
 
 export async function createProduct(data) {
-  const local = { ...data, id: nextId++ };
-  localProducts.unshift(local);
-  return local;
+  return request("/api/products", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateProduct(id, data) {
+  return request(`/api/products/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
 }
 
 // Métrica de contacto: se dispara en paralelo, no se espera la respuesta.

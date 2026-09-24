@@ -20,7 +20,7 @@ import ToggleOfferSwitch from "@/components/ToggleOfferSwitch";
 import { createProduct } from "@/lib/api";
 import { CATEGORIES } from "@/lib/constants";
 
-export default function ProductCreateModal({ producerId, defaultCategory, onCreated }) {
+export default function ProductCreateModal({ defaultCategory, onCreated }) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState(defaultCategory ?? "");
@@ -30,6 +30,7 @@ export default function ProductCreateModal({ producerId, defaultCategory, onCrea
   const [isOffer, setIsOffer] = useState(false);
   const [offerPrice, setOfferPrice] = useState("");
   const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -42,25 +43,32 @@ export default function ProductCreateModal({ producerId, defaultCategory, onCrea
       return;
     }
     setError("");
-    // offerPrice solo viaja cuando isOffer está activo.
-    const product = await createProduct({
-      title: title.trim(),
-      producerId,
-      category,
-      regularPrice: Number(regularPrice),
-      isOffer,
-      ...(isOffer ? { offerPrice: Number(offerPrice) } : {}),
-      stockUnit: stockUnit.trim() || "Sin stock declarado",
-      imageUrl: imageUrl.trim() || undefined,
-    });
-    onCreated(product);
-    setOpen(false);
-    setTitle("");
-    setRegularPrice("");
-    setStockUnit("");
-    setImageUrl("");
-    setIsOffer(false);
-    setOfferPrice("");
+    setSaving(true);
+    try {
+      // offerPrice solo viaja cuando isOffer está activo. El productor dueño
+      // sale de la sesión en el backend, no hace falta mandarlo acá.
+      const product = await createProduct({
+        title: title.trim(),
+        category,
+        regularPrice: Number(regularPrice),
+        isOffer,
+        ...(isOffer ? { offerPrice: Number(offerPrice) } : {}),
+        stockUnit: stockUnit.trim() || undefined,
+        imageUrl: imageUrl.trim() || undefined,
+      });
+      onCreated(product);
+      setOpen(false);
+      setTitle("");
+      setRegularPrice("");
+      setStockUnit("");
+      setImageUrl("");
+      setIsOffer(false);
+      setOfferPrice("");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -145,8 +153,8 @@ export default function ProductCreateModal({ producerId, defaultCategory, onCrea
             </p>
           )}
 
-          <Button type="submit" className="w-full">
-            Publicar
+          <Button type="submit" className="w-full" disabled={saving}>
+            {saving ? "Publicando…" : "Publicar"}
           </Button>
         </form>
       </DialogContent>

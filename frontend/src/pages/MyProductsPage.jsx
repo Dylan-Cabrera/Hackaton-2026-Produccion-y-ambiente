@@ -55,7 +55,6 @@ export default function MyProductsPage() {
           </p>
         </div>
         <ProductCreateModal
-          producerId={user.id}
           defaultCategory={user.category}
           onCreated={(p) => setProducts((prev) => [p, ...prev])}
         />
