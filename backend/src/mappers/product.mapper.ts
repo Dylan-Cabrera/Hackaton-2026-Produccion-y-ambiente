@@ -71,7 +71,8 @@ export class ProductMapper {
     // Usa el nombre de la clase (no `this`) porque se pasa como referencia suelta a Array.map()
     return {
       ...ProductMapper.toPublic(record),
-      producer: record.producer
+      producer: record.producer,
+      ...(record.distanceKm !== undefined ? { distanceKm: record.distanceKm } : {})
     };
   }
 }

@@ -83,10 +83,13 @@ export interface ProductProducerSummary {
 
 export interface ProductWithProducerRecord extends ProductRecord {
   producer: ProductProducerSummary;
+  // Solo presente cuando la búsqueda llegó con lat/lng (HU-04)
+  distanceKm?: number;
 }
 
 export interface PublicProductWithProducer extends PublicProduct {
   producer: ProductProducerSummary;
+  distanceKm?: number;
 }
 
 // Query params de GET /api/products, ya validados/saneados
@@ -96,6 +99,10 @@ export interface SearchProductsInput {
   isOffer?: boolean;
   limit?: number;
   offset?: number;
+  // Posición del comprador (HU-04). lat/lng siempre vienen juntos; maxDistance los requiere.
+  lat?: number;
+  lng?: number;
+  maxDistance?: number;
 }
 
 export interface ProductSearchCriteria {
@@ -104,6 +111,9 @@ export interface ProductSearchCriteria {
   isOffer?: boolean;
   limit: number;
   offset: number;
+  lat?: number;
+  lng?: number;
+  maxDistance?: number;
 }
 
 export interface ProductSearchResult {

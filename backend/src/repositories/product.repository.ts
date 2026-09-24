@@ -23,6 +23,12 @@ export class SequelizeProductRepository implements IProductRepository {
     include: [{ model: ProducerProfile, as: 'producerProfile', attributes: ['businessName'], required: true }]
   };
 
+  // Distancia en km entre el productor y el punto (:lng, :lat) del comprador (HU-04)
+  private static readonly DISTANCE_KM_SQL = `ROUND((ST_Distance(
+    "producer"."coordinates"::geography,
+    ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography
+  ) / 1000)::numeric, 1)`;
+
   async create(data: ProductPersistenceAttributes): Promise<ProductRecord> {
     const instance = await Product.create(data as any);
     return this.toRecord(instance);
@@ -58,6 +64,7 @@ export class SequelizeProductRepository implements IProductRepository {
 
   async search(criteria: ProductSearchCriteria): Promise<ProductSearchResult> {
     const where: any[] = [{ available: true }];
+    const replacements: Record<string, unknown> = {};
 
     if (criteria.category) {
       where.push({ category: criteria.category });
@@ -72,18 +79,40 @@ export class SequelizeProductRepository implements IProductRepository {
           "(unaccent(title) ILIKE unaccent(:q) OR unaccent(COALESCE(description, '')) ILIKE unaccent(:q))"
         )
       );
+      replacements.q = `%${criteria.q}%`;
+    }
+
+    const hasCoords = criteria.lat !== undefined && criteria.lng !== undefined;
+    if (hasCoords) {
+      replacements.lat = criteria.lat;
+      replacements.lng = criteria.lng;
+
+      if (criteria.maxDistance !== undefined) {
+        where.push(
+          sequelize.literal(
+            'ST_DWithin("producer"."coordinates"::geography, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography, :maxDistance * 1000)'
+          )
+        );
+        replacements.maxDistance = criteria.maxDistance;
+      }
     }
 
     const { rows, count } = await Product.findAndCountAll({
       where: { [Op.and]: where },
       include: [SequelizeProductRepository.PRODUCER_INCLUDE],
+      // Con coordenadas se agrega distanceKm; el orden pasa a ser por cercanía
+      attributes: hasCoords
+        ? { include: [[sequelize.literal(SequelizeProductRepository.DISTANCE_KM_SQL), 'distanceKm']] }
+        : undefined,
       limit: criteria.limit,
       offset: criteria.offset,
-      order: [
-        ['isOffer', 'DESC'],
-        ['createdAt', 'DESC']
-      ],
-      replacements: criteria.q ? { q: `%${criteria.q}%` } : undefined
+      order: hasCoords
+        ? [[sequelize.literal('"distanceKm"'), 'ASC'], ['isOffer', 'DESC']]
+        : [
+            ['isOffer', 'DESC'],
+            ['createdAt', 'DESC']
+          ],
+      replacements: Object.keys(replacements).length > 0 ? replacements : undefined
     });
 
     return {
@@ -106,7 +135,10 @@ export class SequelizeProductRepository implements IProductRepository {
         phone: plain.producer.phone,
         locality: plain.producer.locality,
         coordinates: toPlainPoint(plain.producer.coordinates)
-      }
+      },
+      ...(plain.distanceKm !== undefined && plain.distanceKm !== null
+        ? { distanceKm: Number(plain.distanceKm) }
+        : {})
     };
   }
 

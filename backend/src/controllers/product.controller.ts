@@ -64,14 +64,17 @@ export class ProductController {
   // GET /api/products: búsqueda pública por texto/categoría/oferta, paginada
   search = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { q, category, isOffer, limit, offset } = req.query;
+      const { q, category, isOffer, limit, offset, lat, lng, maxDistance } = req.query;
 
       const result = await this.productService.search({
         q: q as string | undefined,
         category: category as Category | undefined,
         isOffer: isOffer as unknown as boolean | undefined,
         limit: limit as unknown as number | undefined,
-        offset: offset as unknown as number | undefined
+        offset: offset as unknown as number | undefined,
+        lat: lat as unknown as number | undefined,
+        lng: lng as unknown as number | undefined,
+        maxDistance: maxDistance as unknown as number | undefined
       });
 
       return res.status(200).json({

@@ -123,5 +123,37 @@ export const searchProductsValidator = [
     .optional()
     .isInt({ min: 0 })
     .withMessage('offset debe ser un entero mayor o igual a 0')
-    .toInt()
+    .toInt(),
+
+  // Posición del comprador (HU-04): lat y lng, si vienen, tienen que venir juntos
+  query('lat').optional().isFloat({ min: -90, max: 90 }).withMessage('lat debe ser un número entre -90 y 90').toFloat(),
+
+  query('lng')
+    .optional()
+    .isFloat({ min: -180, max: 180 })
+    .withMessage('lng debe ser un número entre -180 y 180')
+    .toFloat(),
+
+  query('maxDistance')
+    .optional()
+    .isFloat({ gt: 0 })
+    .withMessage('maxDistance debe ser un número mayor a 0')
+    .toFloat(),
+
+  // No usan .optional() a propósito: deben correr siempre para validar la combinación de campos
+  query('lat').custom((_value, { req }) => {
+    const hasLat = req.query?.lat !== undefined;
+    const hasLng = req.query?.lng !== undefined;
+    if (hasLat !== hasLng) {
+      throw new Error('lat y lng deben enviarse juntos');
+    }
+    return true;
+  }),
+
+  query('maxDistance').custom((value, { req }) => {
+    if (value !== undefined && (req.query?.lat === undefined || req.query?.lng === undefined)) {
+      throw new Error('maxDistance requiere lat y lng');
+    }
+    return true;
+  })
 ];

@@ -81,7 +81,10 @@ export class ProductService implements IProductService {
       category: input.category,
       isOffer: input.isOffer,
       limit,
-      offset
+      offset,
+      lat: input.lat,
+      lng: input.lng,
+      maxDistance: input.maxDistance
     });
 
     return {
