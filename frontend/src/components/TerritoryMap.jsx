@@ -1,9 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet.heat";
-import { mockProducers } from "../data/mockProducers";
+
+const API_URL = "http://localhost:3000/api/producers";
 
 // Colores por categoría, para diferenciar los pines en el mapa
 const CATEGORY_COLORS = {
@@ -31,7 +32,6 @@ function createIcon(color) {
 }
 
 // Componente aparte para la capa de heatmap, porque leaflet.heat no es un componente de React
-// Necesita acceso directo al mapa (useMap) para agregarse como capa
 function HeatmapLayer({ points }) {
   const map = useMap();
 
@@ -44,7 +44,6 @@ function HeatmapLayer({ points }) {
       maxZoom: 17,
     }).addTo(map);
 
-    // Limpieza: si el componente se desmonta o los puntos cambian, sacamos la capa vieja
     return () => {
       map.removeLayer(heatLayer);
     };
@@ -54,7 +53,30 @@ function HeatmapLayer({ points }) {
 }
 
 export default function TerritoryMap() {
-  const heatPoints = mockProducers.map((p) => toLatLng(p.coordinates));
+  const [producers, setProducers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetch(API_URL)
+      .then((res) => {
+        if (!res.ok) throw new Error("La respuesta del servidor no fue exitosa");
+        return res.json();
+      })
+      .then((data) => {
+        setProducers(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return <p>Cargando productores...</p>;
+  if (error) return <p>Error al cargar los datos: {error}</p>;
+
+  const heatPoints = producers.map((p) => toLatLng(p.coordinates));
 
   return (
     <MapContainer
@@ -69,7 +91,7 @@ export default function TerritoryMap() {
 
       <HeatmapLayer points={heatPoints} />
 
-      {mockProducers.map((producer) => (
+      {producers.map((producer) => (
         <Marker
           key={producer.id}
           position={toLatLng(producer.coordinates)}
