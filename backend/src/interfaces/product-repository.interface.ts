@@ -1,6 +1,8 @@
 import {
   ProductPersistenceAttributes,
   ProductRecord,
+  ProductSearchCriteria,
+  ProductSearchResult,
   UpdateProductPersistenceAttributes
 } from './product.types.js';
 
@@ -11,4 +13,6 @@ export interface IProductRepository {
   findById(id: number): Promise<ProductRecord | null>;
   update(id: number, data: UpdateProductPersistenceAttributes): Promise<ProductRecord | null>;
   findAllByProducer(producerId: number, options?: { onlyAvailable?: boolean }): Promise<ProductRecord[]>;
+  // Búsqueda pública (HU-03): siempre available=true, incluye datos del productor
+  search(criteria: ProductSearchCriteria): Promise<ProductSearchResult>;
 }

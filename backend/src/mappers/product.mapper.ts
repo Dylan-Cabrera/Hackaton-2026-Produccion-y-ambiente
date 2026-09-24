@@ -3,7 +3,9 @@ import {
   CreateProductInput,
   ProductPersistenceAttributes,
   ProductRecord,
+  ProductWithProducerRecord,
   PublicProduct,
+  PublicProductWithProducer,
   UpdateProductInput,
   UpdateProductPersistenceAttributes
 } from '../interfaces/product.types.js';
@@ -62,6 +64,14 @@ export class ProductMapper {
       imageUrl: record.imageUrl,
       available: record.available,
       createdAt: record.createdAt
+    };
+  }
+
+  static toPublicWithProducer(record: ProductWithProducerRecord): PublicProductWithProducer {
+    // Usa el nombre de la clase (no `this`) porque se pasa como referencia suelta a Array.map()
+    return {
+      ...ProductMapper.toPublic(record),
+      producer: record.producer
     };
   }
 }

@@ -1,4 +1,4 @@
-import { body, param } from 'express-validator';
+import { body, param, query } from 'express-validator';
 import { CATEGORIES, STOCK_UNITS } from '../constants/catalog.constants.js';
 
 export const createProductValidator = [
@@ -100,4 +100,28 @@ export const updateProductValidator = [
 
 export const productIdValidator = [
   param('id').isInt({ min: 1 }).withMessage('El id debe ser un número entero positivo').toInt()
+];
+
+// GET /api/products (HU-03)
+export const searchProductsValidator = [
+  query('q').optional().trim().isLength({ max: 80 }).withMessage('q no puede superar los 80 caracteres'),
+
+  query('category')
+    .optional()
+    .isIn(CATEGORIES)
+    .withMessage(`category debe ser una de: ${CATEGORIES.join(', ')}`),
+
+  query('isOffer').optional().isBoolean().withMessage('isOffer debe ser un booleano').toBoolean(),
+
+  query('limit')
+    .optional()
+    .isInt({ min: 1, max: 100 })
+    .withMessage('limit debe ser un entero entre 1 y 100')
+    .toInt(),
+
+  query('offset')
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage('offset debe ser un entero mayor o igual a 0')
+    .toInt()
 ];

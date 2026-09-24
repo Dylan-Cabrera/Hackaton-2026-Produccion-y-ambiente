@@ -1,14 +1,22 @@
 import { IProductService } from '../interfaces/product-service.interface.js';
 import { IProductRepository } from '../interfaces/product-repository.interface.js';
 import { IProducerRepository } from '../interfaces/producer-repository.interface.js';
-import { CreateProductInput, PublicProduct, UpdateProductInput } from '../interfaces/product.types.js';
+import {
+  CreateProductInput,
+  ProductSearchResponse,
+  PublicProduct,
+  SearchProductsInput,
+  UpdateProductInput
+} from '../interfaces/product.types.js';
 import { Category } from '../constants/catalog.constants.js';
 import { ProductMapper } from '../mappers/product.mapper.js';
 import { ForbiddenError, NotFoundError, ValidationError } from '../errors/app-error.js';
 
-// Caso de uso "productos de un productor": alta, edición y listados. Depende únicamente
-// de abstracciones (DIP), lo que permite testearlo con dobles sin tocar Sequelize.
+// Caso de uso "productos de un productor": alta, edición, listados y búsqueda pública.
+// Depende únicamente de abstracciones (DIP), lo que permite testearlo con dobles sin tocar Sequelize.
 export class ProductService implements IProductService {
+  private static readonly DEFAULT_SEARCH_LIMIT = 24;
+
   constructor(
     private readonly productRepository: IProductRepository,
     private readonly producerRepository: IProducerRepository
@@ -62,6 +70,26 @@ export class ProductService implements IProductService {
   async listByProducer(producerId: number): Promise<PublicProduct[]> {
     const records = await this.productRepository.findAllByProducer(producerId, { onlyAvailable: true });
     return records.map(ProductMapper.toPublic);
+  }
+
+  async search(input: SearchProductsInput): Promise<ProductSearchResponse> {
+    const limit = input.limit ?? ProductService.DEFAULT_SEARCH_LIMIT;
+    const offset = input.offset ?? 0;
+
+    const { items, total } = await this.productRepository.search({
+      q: input.q?.trim() || undefined,
+      category: input.category,
+      isOffer: input.isOffer,
+      limit,
+      offset
+    });
+
+    return {
+      items: items.map(ProductMapper.toPublicWithProducer),
+      limit,
+      offset,
+      total
+    };
   }
 
   private async resolveProducerCategory(producerId: number): Promise<Category> {

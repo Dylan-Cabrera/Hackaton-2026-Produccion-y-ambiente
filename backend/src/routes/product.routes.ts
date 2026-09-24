@@ -3,13 +3,17 @@ import { ProductController } from '../controllers/product.controller.js';
 import {
   createProductValidator,
   updateProductValidator,
-  productIdValidator
+  productIdValidator,
+  searchProductsValidator
 } from '../validators/product.validator.js';
 import { validateRequest } from '../middlewares/validate-request.js';
 import { authenticateToken, requireRole } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 const productController = new ProductController();
+
+// Búsqueda pública (no requiere sesión)
+router.get('/', searchProductsValidator, validateRequest, productController.search);
 
 router.post(
   '/',

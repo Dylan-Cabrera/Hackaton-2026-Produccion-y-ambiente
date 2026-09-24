@@ -1,4 +1,10 @@
-import { CreateProductInput, PublicProduct, UpdateProductInput } from './product.types.js';
+import {
+  CreateProductInput,
+  ProductSearchResponse,
+  PublicProduct,
+  SearchProductsInput,
+  UpdateProductInput
+} from './product.types.js';
 
 export interface IProductService {
   create(producerId: number, input: CreateProductInput): Promise<PublicProduct>;
@@ -8,4 +14,6 @@ export interface IProductService {
   listMine(producerId: number): Promise<PublicProduct[]>;
   // Solo productos disponibles de un productor (vista pública)
   listByProducer(producerId: number): Promise<PublicProduct[]>;
+  // Búsqueda pública por texto/categoría/oferta, paginada (GET /api/products)
+  search(input: SearchProductsInput): Promise<ProductSearchResponse>;
 }
