@@ -1,4 +1,5 @@
 import TerritoryMap from "./components/TerritoryMap";
+import UnmetDemandPanel from "./components/UnmetDemandPanel";
 import "./App.css";
 
 function App() {
@@ -11,6 +12,7 @@ function App() {
 
       <main>
         <TerritoryMap />
+        <UnmetDemandPanel />
       </main>
     </div>
   );
