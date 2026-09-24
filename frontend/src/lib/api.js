@@ -129,6 +129,31 @@ export async function updateProduct(id, data) {
   });
 }
 
+// --- Necesidades ---
+
+export async function getNeeds(params) {
+  const qs = new URLSearchParams();
+  if (params?.category) qs.set("category", params.category);
+  const suffix = qs.toString() ? `?${qs}` : "";
+  return request(`/api/needs${suffix}`);
+}
+
+export async function getNeed(id) {
+  return request(`/api/needs/${id}`);
+}
+
+export async function getMyNeeds() {
+  return request("/api/needs/mine");
+}
+
+export async function createNeed(data) {
+  return request("/api/needs", { method: "POST", body: JSON.stringify(data) });
+}
+
+export async function updateNeedStatus(id, status) {
+  return request(`/api/needs/${id}`, { method: "PATCH", body: JSON.stringify({ status }) });
+}
+
 // Métrica de contacto: se dispara en paralelo, no se espera la respuesta.
 // Se traga cualquier error a propósito: un fallo acá nunca debe frenar el
 // contacto real por WhatsApp.

@@ -12,3 +12,5 @@ export const CATEGORIES = [
 export const PAYMENT_METHODS = ["Efectivo", "Transferencia", "Mercado Pago"];
 
 export const DELIVERY_OPTIONS = ["Retiro en el local", "Envío a domicilio", "Punto de encuentro"];
+
+export const NEED_FREQUENCIES = ["Única", "Semanal", "Quincenal", "Mensual"];

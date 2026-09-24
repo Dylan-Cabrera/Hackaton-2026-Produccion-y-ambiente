@@ -2,7 +2,7 @@ import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { trackContactClick } from "@/lib/api";
 
-export default function WhatsAppContactButton({ producer, product }) {
+export default function WhatsAppContactButton({ producer, product, message: customMessage, label }) {
   if (!producer.phone) {
     return (
       <Button variant="outline" disabled className="w-full">
@@ -11,9 +11,11 @@ export default function WhatsAppContactButton({ producer, product }) {
     );
   }
 
-  const message = `Hola ${producer.businessName}, vi tu publicación${
-    product ? ` de ${product.title}` : ""
-  } en la plataforma y quiero coordinar una compra.`;
+  const message =
+    customMessage ??
+    `Hola ${producer.businessName}, vi tu publicación${
+      product ? ` de ${product.title}` : ""
+    } en la plataforma y quiero coordinar una compra.`;
   const href = `https://wa.me/${producer.phone}?text=${encodeURIComponent(message)}`;
 
   return (
@@ -27,7 +29,7 @@ export default function WhatsAppContactButton({ producer, product }) {
     >
       <a href={href} target="_blank" rel="noreferrer">
         <MessageCircle className="size-4" />
-        Contactar por WhatsApp
+        {label ?? "Contactar por WhatsApp"}
       </a>
     </Button>
   );
