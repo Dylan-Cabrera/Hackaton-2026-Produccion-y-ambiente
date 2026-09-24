@@ -3,7 +3,8 @@ import {
   CreateProducerInput,
   ProducerPersistenceAttributes,
   ProducerRecord,
-  PublicProducerProfile
+  PublicProducerProfile,
+  UpdateProducerInput
 } from '../interfaces/producer.types.js';
 
 // Responsabilidad única: traducir entre las distintas formas de un productor
@@ -28,6 +29,29 @@ export class ProducerMapper {
       deliveryOptions: input.deliveryOptions ?? [],
       bio: input.bio ?? null
     };
+  }
+
+  static toUpdatePersistence(input: UpdateProducerInput): Partial<ProducerPersistenceAttributes> {
+    const data: Partial<ProducerPersistenceAttributes> = {};
+
+    if (input.name !== undefined) data.name = input.name;
+    if (input.businessName !== undefined) data.businessName = input.businessName;
+    if (input.category !== undefined) data.category = input.category;
+    if (input.phone !== undefined) data.phone = input.phone;
+    if (input.paymentMethods !== undefined) data.paymentMethods = input.paymentMethods;
+    if (input.deliveryOptions !== undefined) data.deliveryOptions = input.deliveryOptions;
+    if (input.bio !== undefined) data.bio = input.bio;
+
+    if (input.location !== undefined) {
+      data.address = input.location.address;
+      data.coordinates = {
+        type: 'Point',
+        coordinates: input.location.coordinates,
+        crs: { type: 'name', properties: { name: `EPSG:${WGS84_SRID}` } }
+      };
+    }
+
+    return data;
   }
 
   static toPublic(record: ProducerRecord, { includeEmail = false } = {}): PublicProducerProfile {

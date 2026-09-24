@@ -73,6 +73,18 @@ export interface PublicProducerProfile {
   createdAt: Date;
 }
 
+// Datos parciales para actualizar un productor (todos los campos opcionales)
+export interface UpdateProducerInput {
+  name?: string;
+  businessName?: string;
+  category?: ProducerCategory;
+  phone?: string;
+  location?: LocationInput;
+  paymentMethods?: string[];
+  deliveryOptions?: string[];
+  bio?: string | null;
+}
+
 export interface LoginInput {
   email: string;
   password: string;

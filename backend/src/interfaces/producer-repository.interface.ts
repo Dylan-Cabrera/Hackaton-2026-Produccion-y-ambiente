@@ -6,4 +6,6 @@ export interface IProducerRepository {
   create(data: ProducerPersistenceAttributes): Promise<ProducerRecord>;
   findByEmail(email: string): Promise<ProducerRecord | null>;
   findById(id: number): Promise<ProducerRecord | null>;
+  update(id: number, data: Partial<ProducerPersistenceAttributes>): Promise<ProducerRecord | null>;
+  delete(id: number): Promise<boolean>;
 }
