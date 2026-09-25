@@ -1,0 +1,3 @@
+# El backend es de otro compañero de equipo: se usa en local para probar
+# contra el frontend, pero desde este repo no se sube ni se trackea.
+backend/

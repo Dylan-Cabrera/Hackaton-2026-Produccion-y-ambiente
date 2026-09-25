@@ -1,0 +1,163 @@
+.map-card {
+  background: var(--map-color-card);
+  border: 1px solid var(--map-color-border);
+  border-radius: var(--map-radius-lg);
+  box-shadow: var(--map-shadow-card);
+  overflow: hidden;
+}
+
+.mode-toggle {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.9rem 1.25rem 0;
+}
+
+.mode-button {
+  padding: 0.45rem 1.1rem;
+  border-radius: var(--map-radius-md);
+  border: 1px solid var(--map-color-border);
+  background: #fff;
+  color: var(--map-color-text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mode-button.active {
+  background: var(--map-color-primary);
+  border-color: var(--map-color-primary);
+  color: #fff;
+}
+
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.6rem;
+  align-items: center;
+  padding: 0.9rem 1.25rem;
+  border-bottom: 1px solid var(--map-color-border);
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  color: var(--map-color-text);
+}
+
+.legend-button {
+  border: 1px solid var(--map-color-border);
+  background: #fff;
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem;
+  cursor: pointer;
+}
+
+.legend-button.active {
+  background: var(--map-color-text);
+  border-color: var(--map-color-text);
+  color: #fff;
+}
+
+.legend-button.active .legend-dot {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+}
+
+.demand-form {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.9rem 1.25rem;
+  border-bottom: 1px solid var(--map-color-border);
+}
+
+.demand-form input {
+  flex: 1;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--map-color-border);
+  border-radius: var(--map-radius-md);
+  font-size: 0.9rem;
+}
+
+.demand-form input:focus {
+  outline: 2px solid var(--map-color-primary);
+  outline-offset: 1px;
+}
+
+.demand-form button {
+  padding: 0.55rem 1.2rem;
+  border: none;
+  border-radius: var(--map-radius-md);
+  background: var(--map-color-primary);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.demand-form button:hover {
+  background: var(--map-color-primary-dark);
+}
+
+.demand-empty {
+  margin: 0;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.85rem;
+  color: var(--map-color-muted);
+  border-bottom: 1px solid var(--map-color-border);
+}
+
+.legend-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.6);
+}
+
+.leaflet-container {
+  height: 520px;
+  width: 100%;
+}
+
+.producer-marker {
+  border-radius: 50%;
+  border: 3px solid #ffffff;
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+.producer-popup .leaflet-popup-content-wrapper {
+  border-radius: var(--map-radius-md);
+  box-shadow: 0 10px 24px rgba(31, 42, 31, 0.18);
+}
+
+.popup-content {
+  border-left: 4px solid var(--popup-color, var(--map-color-primary));
+  padding-left: 0.6rem;
+}
+
+.popup-content strong {
+  display: block;
+  font-size: 0.95rem;
+  color: var(--map-color-text);
+}
+
+.popup-content span {
+  font-size: 0.82rem;
+  color: var(--map-color-muted);
+}
+
+.map-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 520px;
+  font-size: 0.95rem;
+  color: var(--map-color-muted);
+}
+
+.map-status.is-error {
+  color: #a33636;
+}
