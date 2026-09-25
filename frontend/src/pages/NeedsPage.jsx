@@ -28,7 +28,10 @@ export default function NeedsPage() {
     setError(null);
     getNeeds(category === "all" ? undefined : { category })
       .then(setNeeds)
-      .catch((err) => setError(err.message))
+      .catch((err) => {
+        console.error("No se pudieron cargar las necesidades:", err.status, err.message);
+        setError(err.message);
+      })
       .finally(() => setLoading(false));
   }, [category, retryTick]);
 

@@ -25,7 +25,10 @@ export default function NeedDetailPage() {
   useEffect(() => {
     getNeed(id)
       .then(setNeed)
-      .catch((err) => setError(err.message))
+      .catch((err) => {
+        console.error("No se pudo cargar la necesidad:", err.status, err.message);
+        setError(err.message);
+      })
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -39,6 +42,7 @@ export default function NeedDetailPage() {
       const updated = await updateNeedStatus(id, status);
       setNeed(updated);
     } catch (err) {
+      console.error("No se pudo actualizar el estado de la necesidad:", err.status, err.fieldErrors ?? err.message);
       setError(err.message);
     } finally {
       setUpdating(false);

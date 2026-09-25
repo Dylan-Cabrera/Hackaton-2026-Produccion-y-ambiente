@@ -23,7 +23,10 @@ export default function NeedCreatePage() {
   const [category, setCategory] = useState("");
   const [quantity, setQuantity] = useState("");
   const [unit, setUnit] = useState("");
-  const [frequency, setFrequency] = useState("");
+  // Default "UNICA": el backend trata `frequency` como opcional (usa este mismo default
+  // si no viene en el body), pero solo si la clave falta. Si mandamos "" explícito, la
+  // validación de campos lo rechaza igual porque "" no es un valor válido del enum.
+  const [frequency, setFrequency] = useState("UNICA");
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
@@ -66,6 +69,9 @@ export default function NeedCreatePage() {
       });
       navigate(`/necesidades/${need.id}`);
     } catch (err) {
+      // Sin esto, un 400 de validación quedaba solo en el mensaje en pantalla,
+      // sin rastro en devtools para debuggear qué campo lo disparó.
+      console.error("No se pudo publicar la necesidad:", err.status, err.fieldErrors ?? err.message);
       setError(err.message);
       const byField = {};
       for (const fe of err.fieldErrors ?? []) {
