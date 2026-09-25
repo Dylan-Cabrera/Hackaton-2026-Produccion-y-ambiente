@@ -17,6 +17,7 @@ export interface TopTerm {
 }
 
 export interface ProducerDemandTotals {
+  productViews: number;
   whatsappClicks: number;
   relatedSearches: number;
   relatedFails: number;
@@ -24,11 +25,49 @@ export interface ProducerDemandTotals {
   openNeedsNearby: number;
 }
 
+// Un registro por día del período (incluidos los días sin actividad), fecha en hora argentina
+export interface DailyActivity {
+  date: string; // YYYY-MM-DD
+  views: number;
+  clicks: number;
+}
+
+// Todos los productos del productor (incluidos los pausados) con su actividad del período
+export interface ProductPerformance {
+  productId: number;
+  title: string;
+  available: boolean;
+  views: number;
+  clicks: number;
+}
+
+// Suma ponderada de eventos de demanda en una localidad (un contacto por WhatsApp pesa 3;
+// una búsqueda o una visita, 1)
+export interface LocalityDemand {
+  locality: string;
+  events: number;
+}
+
 export interface ProducerDemandResponse {
   days: number;
   totals: ProducerDemandTotals;
   clicksByLocality: ClicksByLocality[];
   topTerms: TopTerm[];
+  dailyActivity: DailyActivity[];
+  productPerformance: ProductPerformance[];
+  demandHeat: HeatCell[];
+  demandByLocality: LocalityDemand[];
+}
+
+// Query params de GET /api/analytics/demand-heat (mapa de demanda público)
+export interface DemandHeatOptions {
+  days?: number;
+  category?: Category;
+}
+
+export interface DemandHeatResponse {
+  heat: HeatCell[];
+  byLocality: LocalityDemand[];
 }
 
 // Query params compartidos por los dos endpoints de HU-08 (dashboard admin)

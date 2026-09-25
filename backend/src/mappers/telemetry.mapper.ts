@@ -8,6 +8,8 @@ export interface ResolvedTelemetryContext {
   category: Category | null;
   locality: string | null;
   coordinates: CoordinatesTuple | null;
+  // Para eventos de producto sale del propio producto, no del body
+  producerId: number | null;
 }
 
 // Responsabilidad única: traducir el body de la API + el contexto ya resuelto por el
@@ -31,7 +33,7 @@ export class TelemetryMapper {
           }
         : null,
       productId: input.productId ?? null,
-      producerId: input.producerId ?? null,
+      producerId: resolved.producerId,
       userId
     };
   }

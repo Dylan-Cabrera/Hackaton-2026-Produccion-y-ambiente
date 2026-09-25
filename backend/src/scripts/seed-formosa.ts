@@ -921,6 +921,7 @@ async function seed() {
   // Clics de WhatsApp: cada producto recibe entre 0 y 12 clics, con más peso en los que
   // están en oferta (comportamiento real: la oferta relámpago atrae más contactos).
   let whatsappClicks = 0;
+  let productViews = 0;
   for (const [slug, producer] of producers) {
     const products = productsByProducer.get(slug) ?? [];
     const producerSpec = PRODUCERS.find((p) => p.slug === slug)!;
@@ -928,6 +929,22 @@ async function seed() {
       const base = randomInt(0, 8);
       const bonus = product.isOffer ? randomInt(2, 6) : 0;
       const clicks = base + bonus;
+
+      // Visitas al detalle: siempre más que contactos (conversión realista de ~15-35%)
+      const views = clicks * randomInt(3, 6) + randomInt(2, 10);
+      for (let i = 0; i < views; i++) {
+        await createEvent({
+          eventType: 'PRODUCT_VIEW',
+          category: producerSpec.category,
+          locality: Math.random() < 0.7 ? producerSpec.locality : pick(LOCALITY_NAMES),
+          productId: product.id,
+          producerId: producer.id,
+          userId: Math.random() < 0.3 ? pick([...consumers.values()]).id : null,
+          daysAgo: randomDaysAgo(90)
+        });
+        productViews += 1;
+      }
+
       for (let i = 0; i < clicks; i++) {
         await createEvent({
           eventType: 'WHATSAPP_CLICK',
@@ -943,7 +960,9 @@ async function seed() {
     }
   }
 
-  console.log(`Telemetría: ${searchHits} SEARCH_HIT, ${searchFails} SEARCH_FAIL, ${whatsappClicks} WHATSAPP_CLICK`);
+  console.log(
+    `Telemetría: ${searchHits} SEARCH_HIT, ${searchFails} SEARCH_FAIL, ${productViews} PRODUCT_VIEW, ${whatsappClicks} WHATSAPP_CLICK`
+  );
 
   // --- Historial dedicado de 2 consumidores para el motivo NOW_AVAILABLE (HU-10): buscan
   // algo que todavía no existe, y recién después se publica el producto que lo resuelve. ---

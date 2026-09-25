@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { IProductService } from '../interfaces/product-service.interface.js';
 import { productService as defaultProductService } from '../config/container.js';
 import { AuthRequest } from '../middlewares/auth.middleware.js';
+import { PRODUCT_IMAGES_SUBDIR } from '../middlewares/upload-image.js';
 import { Category } from '../constants/catalog.constants.js';
 
 export class ProductController {
@@ -18,6 +19,16 @@ export class ProductController {
     } catch (error) {
       return next(error);
     }
+  };
+
+  // POST /api/products/upload-image: el archivo ya lo guardó y validó el middleware uploadProductImage
+  uploadImage = (req: AuthRequest, res: Response) => {
+    const baseUrl = process.env.PUBLIC_URL ?? `${req.protocol}://${req.get('host')}`;
+
+    return res.status(201).json({
+      message: 'Imagen subida exitosamente',
+      data: { url: `${baseUrl}/uploads/${PRODUCT_IMAGES_SUBDIR}/${req.file!.filename}` }
+    });
   };
 
   update = async (req: AuthRequest, res: Response, next: NextFunction) => {

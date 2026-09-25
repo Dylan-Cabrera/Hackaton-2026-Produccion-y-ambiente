@@ -25,6 +25,25 @@ export class AnalyticsController {
     }
   };
 
+  // GET /api/analytics/demand-heat (público)
+  demandHeat = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const { days, category } = req.query;
+
+      const result = await this.analyticsService.getDemandHeat({
+        days: days as unknown as number | undefined,
+        category: category as unknown as Category | undefined
+      });
+
+      return res.status(200).json({
+        message: 'Mapa de demanda obtenido exitosamente',
+        data: result
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   // GET /api/analytics/admin-summary
   adminSummary = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {

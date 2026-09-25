@@ -45,7 +45,7 @@ export const createProductValidator = [
 
   body('imageUrl')
     .optional({ values: 'null' })
-    .isURL({ protocols: ['http', 'https'] })
+    .isURL({ protocols: ['http', 'https'], require_tld: false })
     .withMessage('imageUrl debe ser una URL http/https válida')
 ];
 
@@ -92,7 +92,7 @@ export const updateProductValidator = [
 
   body('imageUrl')
     .optional({ values: 'null' })
-    .isURL({ protocols: ['http', 'https'] })
+    .isURL({ protocols: ['http', 'https'], require_tld: false })
     .withMessage('imageUrl debe ser una URL http/https válida'),
 
   body('available').optional().isBoolean().withMessage('available debe ser un booleano').toBoolean()

@@ -3,7 +3,8 @@ import { AnalyticsController } from '../controllers/analytics.controller.js';
 import {
   producerDemandValidator,
   adminSummaryValidator,
-  unmetDemandMapValidator
+  unmetDemandMapValidator,
+  demandHeatValidator
 } from '../validators/analytics.validator.js';
 import { validateRequest } from '../middlewares/validate-request.js';
 import { authenticateToken, requireRole } from '../middlewares/auth.middleware.js';
@@ -19,6 +20,9 @@ router.get(
   validateRequest,
   analyticsController.producerDemand
 );
+
+// Público: solo datos agregados por celdas de ~2 km y por localidad, nunca eventos individuales
+router.get('/demand-heat', demandHeatValidator, validateRequest, analyticsController.demandHeat);
 
 router.get(
   '/admin-summary',

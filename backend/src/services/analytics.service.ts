@@ -10,7 +10,9 @@ import {
   AdminAnalyticsOptions,
   AdminSummaryResponse,
   UnmetDemandMapOptions,
-  UnmetDemandMapResponse
+  UnmetDemandMapResponse,
+  DemandHeatOptions,
+  DemandHeatResponse
 } from '../interfaces/analytics.types.js';
 import { UnmetNeed } from '../interfaces/analytics.types.js';
 import { NeedWithAuthorRecord } from '../interfaces/need.types.js';
@@ -26,6 +28,7 @@ export class AnalyticsService implements IAnalyticsService {
   private static readonly TOP_TERMS_LIMIT = 10;
   private static readonly TOP_CATEGORIES_LIMIT = 10;
   private static readonly OPPORTUNITIES_LIMIT = 10;
+  private static readonly TOP_LOCALITIES_LIMIT = 8;
 
   constructor(
     private readonly analyticsRepository: IAnalyticsRepository,
@@ -45,11 +48,24 @@ export class AnalyticsService implements IAnalyticsService {
     const since = new Date(Date.now() - days * MS_PER_DAY);
     const categories = await this.resolveRelatedCategories(producerId, producer.producerProfile.category);
 
-    const [clicksByLocality, topTerms, totals, openNeedsForProducer] = await Promise.all([
+    const [
+      clicksByLocality,
+      topTerms,
+      totals,
+      openNeedsForProducer,
+      dailyActivity,
+      productPerformance,
+      demandHeat,
+      demandByLocality
+    ] = await Promise.all([
       this.analyticsRepository.getClicksByLocality(producerId, since),
       this.analyticsRepository.getTopTerms(categories, since, AnalyticsService.TOP_TERMS_LIMIT),
       this.analyticsRepository.getTotals(producerId, categories, since),
-      this.needMatchingService.getForProducer(producerId)
+      this.needMatchingService.getForProducer(producerId),
+      this.analyticsRepository.getDailyActivity(producerId, days),
+      this.analyticsRepository.getProductPerformance(producerId, since),
+      this.analyticsRepository.getDemandHeat(since, categories),
+      this.analyticsRepository.getDemandByLocality(since, categories, AnalyticsService.TOP_LOCALITIES_LIMIT)
     ]);
 
     return {
@@ -60,8 +76,26 @@ export class AnalyticsService implements IAnalyticsService {
         openNeedsNearby: openNeedsForProducer.length
       },
       clicksByLocality,
-      topTerms
+      topTerms,
+      dailyActivity,
+      productPerformance,
+      demandHeat,
+      demandByLocality
     };
+  }
+
+  // Mapa de demanda público: dónde se busca, se mira y se contacta (opcionalmente de un rubro)
+  async getDemandHeat(options: DemandHeatOptions): Promise<DemandHeatResponse> {
+    const days = options.days ?? AnalyticsService.DEFAULT_DAYS;
+    const since = new Date(Date.now() - days * MS_PER_DAY);
+    const categories = options.category ? [options.category] : undefined;
+
+    const [heat, byLocality] = await Promise.all([
+      this.analyticsRepository.getDemandHeat(since, categories),
+      this.analyticsRepository.getDemandByLocality(since, categories, AnalyticsService.TOP_LOCALITIES_LIMIT)
+    ]);
+
+    return { heat, byLocality };
   }
 
   // Caso de uso "dashboard provincial" (HU-08): panorama agregado de toda la plataforma para el admin.

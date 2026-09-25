@@ -11,6 +11,7 @@ import analyticsRoutes from './routes/analytics.routes.js';
 import needRoutes from './routes/need.routes.js';
 import metaRoutes from './routes/meta.routes.js';
 import { errorHandler } from './middlewares/error-handler.js';
+import { UPLOADS_DIR } from './middlewares/upload-image.js';
 
 export const createApp = () => {
   const app = express();
@@ -36,6 +37,15 @@ export const createApp = () => {
       timestamp: new Date()
     });
   });
+
+  // Fotos de productos subidas por los productores. nosniff: el navegador respeta el
+  // Content-Type por extensión y nunca interpreta un archivo como HTML/JS.
+  app.use(
+    '/uploads',
+    express.static(UPLOADS_DIR, {
+      setHeaders: (res) => res.setHeader('X-Content-Type-Options', 'nosniff')
+    })
+  );
 
   // Rutas de autenticación
   app.use('/api/auth', authRoutes);

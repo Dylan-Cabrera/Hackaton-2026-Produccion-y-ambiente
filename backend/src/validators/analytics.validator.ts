@@ -7,6 +7,11 @@ export const producerDemandValidator = [daysValidator];
 
 export const adminSummaryValidator = [daysValidator];
 
+export const demandHeatValidator = [
+  daysValidator,
+  query('category').optional().isIn(CATEGORIES).withMessage('category no es válida')
+];
+
 export const unmetDemandMapValidator = [
   daysValidator,
   query('category').optional().isIn(CATEGORIES).withMessage('category no es válida')

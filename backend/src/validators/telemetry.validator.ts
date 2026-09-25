@@ -1,5 +1,5 @@
 import { body } from 'express-validator';
-import { EVENT_TYPES } from '../constants/telemetry.constants.js';
+import { EVENT_TYPES, PRODUCT_EVENT_TYPES } from '../constants/telemetry.constants.js';
 import { CATEGORIES } from '../constants/catalog.constants.js';
 import { LOCALITY_NAMES } from '../constants/localities.constants.js';
 
@@ -34,11 +34,11 @@ export const telemetryEventValidator = [
 
   body('productId').optional().isInt({ min: 1 }).withMessage('productId debe ser un entero positivo').toInt(),
 
-  // WHATSAPP_CLICK requiere productId (needId, alternativo, llega con HU-11)
+  // WHATSAPP_CLICK y PRODUCT_VIEW requieren productId (needId, alternativo, llega con HU-11)
   body().custom((_value, { req }) => {
     const { eventType, productId } = req.body ?? {};
-    if (eventType === 'WHATSAPP_CLICK' && !productId) {
-      throw new Error('WHATSAPP_CLICK requiere productId');
+    if (PRODUCT_EVENT_TYPES.includes(eventType) && !productId) {
+      throw new Error(`${eventType} requiere productId`);
     }
     return true;
   }),

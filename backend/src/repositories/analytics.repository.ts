@@ -9,13 +9,22 @@ import {
   TopCategory,
   SupplyPoint,
   HeatCell,
-  Opportunity
+  Opportunity,
+  DailyActivity,
+  ProductPerformance,
+  LocalityDemand
 } from '../interfaces/analytics.types.js';
 
 // Única clase que conoce Sequelize/SQL crudo para las consultas agregadas de analítica.
 // El resto del dominio solo ve IAnalyticsRepository (DIP). Todo valor del usuario que entra
 // en SQL va con `replacements`, nunca interpolado en el string (regla de seguridad del plan).
 export class SequelizeAnalyticsRepository implements IAnalyticsRepository {
+  // Los días del dashboard se cortan en hora de Formosa, no en UTC (si no, la actividad de la noche cae al día siguiente)
+  private static readonly TIME_ZONE = 'America/Argentina/Cordoba';
+
+  // Un contacto por WhatsApp es una señal de compra mucho más fuerte que una búsqueda o una visita
+  private static readonly DEMAND_WEIGHT_SQL = `CASE WHEN "eventType" = 'WHATSAPP_CLICK' THEN 3 ELSE 1 END`;
+
   async getClicksByLocality(producerId: number, since: Date): Promise<ClicksByLocality[]> {
     return sequelize.query<ClicksByLocality>(
       `SELECT locality, COUNT(*)::int AS clicks
@@ -51,9 +60,16 @@ export class SequelizeAnalyticsRepository implements IAnalyticsRepository {
     producerId: number,
     categories: Category[],
     since: Date
-  ): Promise<{ whatsappClicks: number; relatedSearches: number; relatedFails: number }> {
-    const [row] = await sequelize.query<{ whatsappClicks: number; relatedSearches: number; relatedFails: number }>(
+  ): Promise<{ productViews: number; whatsappClicks: number; relatedSearches: number; relatedFails: number }> {
+    const [row] = await sequelize.query<{
+      productViews: number;
+      whatsappClicks: number;
+      relatedSearches: number;
+      relatedFails: number;
+    }>(
       `SELECT
+         (SELECT COUNT(*)::int FROM demand_metrics
+           WHERE "eventType" = 'PRODUCT_VIEW' AND "producerId" = :producerId AND "timestamp" >= :since) AS "productViews",
          (SELECT COUNT(*)::int FROM demand_metrics
            WHERE "eventType" = 'WHATSAPP_CLICK' AND "producerId" = :producerId AND "timestamp" >= :since) AS "whatsappClicks",
          (SELECT COUNT(*)::int FROM demand_metrics
@@ -64,6 +80,83 @@ export class SequelizeAnalyticsRepository implements IAnalyticsRepository {
     );
 
     return row;
+  }
+
+  async getDailyActivity(producerId: number, days: number): Promise<DailyActivity[]> {
+    return sequelize.query<DailyActivity>(
+      `WITH period AS (
+         SELECT generate_series(
+                  (now() AT TIME ZONE :tz)::date - (:days - 1),
+                  (now() AT TIME ZONE :tz)::date,
+                  interval '1 day'
+                )::date AS day
+       )
+       SELECT to_char(p.day, 'YYYY-MM-DD') AS date,
+              COUNT(m.id) FILTER (WHERE m."eventType" = 'PRODUCT_VIEW')::int AS views,
+              COUNT(m.id) FILTER (WHERE m."eventType" = 'WHATSAPP_CLICK')::int AS clicks
+       FROM period p
+       LEFT JOIN demand_metrics m
+         ON m."producerId" = :producerId
+        AND m."eventType" IN ('PRODUCT_VIEW', 'WHATSAPP_CLICK')
+        AND (m."timestamp" AT TIME ZONE :tz)::date = p.day
+       GROUP BY p.day
+       ORDER BY p.day`,
+      { type: QueryTypes.SELECT, replacements: { producerId, days, tz: SequelizeAnalyticsRepository.TIME_ZONE } }
+    );
+  }
+
+  async getProductPerformance(producerId: number, since: Date): Promise<ProductPerformance[]> {
+    return sequelize.query<ProductPerformance>(
+      `SELECT p.id AS "productId", p.title, p.available,
+              COUNT(m.id) FILTER (WHERE m."eventType" = 'PRODUCT_VIEW')::int AS views,
+              COUNT(m.id) FILTER (WHERE m."eventType" = 'WHATSAPP_CLICK')::int AS clicks
+       FROM products p
+       LEFT JOIN demand_metrics m
+         ON m."productId" = p.id
+        AND m."eventType" IN ('PRODUCT_VIEW', 'WHATSAPP_CLICK')
+        AND m."timestamp" >= :since
+       WHERE p."producerId" = :producerId
+       GROUP BY p.id
+       ORDER BY views DESC, clicks DESC, p.title`,
+      { type: QueryTypes.SELECT, replacements: { producerId, since } }
+    );
+  }
+
+  // --- Mapa de demanda (público y dashboard del productor) ---
+
+  async getDemandHeat(since: Date, categories?: Category[]): Promise<HeatCell[]> {
+    const hasCategories = categories !== undefined && categories.length > 0;
+
+    const rows = await sequelize.query<{ lat: number; lng: number; weight: number }>(
+      `SELECT ROUND(ST_Y(ST_SnapToGrid(coordinates::geometry, 0.02))::numeric, 4)::float8 AS lat,
+              ROUND(ST_X(ST_SnapToGrid(coordinates::geometry, 0.02))::numeric, 4)::float8 AS lng,
+              SUM(${SequelizeAnalyticsRepository.DEMAND_WEIGHT_SQL})::int AS weight
+       FROM demand_metrics
+       WHERE coordinates IS NOT NULL
+         AND "timestamp" >= :since
+         ${hasCategories ? 'AND category IN (:categories)' : ''}
+       GROUP BY 1, 2
+       ORDER BY weight DESC`,
+      { type: QueryTypes.SELECT, replacements: { since, categories } }
+    );
+
+    return rows.map((row) => [row.lat, row.lng, row.weight]);
+  }
+
+  async getDemandByLocality(since: Date, categories: Category[] | undefined, limit: number): Promise<LocalityDemand[]> {
+    const hasCategories = categories !== undefined && categories.length > 0;
+
+    return sequelize.query<LocalityDemand>(
+      `SELECT locality, SUM(${SequelizeAnalyticsRepository.DEMAND_WEIGHT_SQL})::int AS events
+       FROM demand_metrics
+       WHERE locality IS NOT NULL
+         AND "timestamp" >= :since
+         ${hasCategories ? 'AND category IN (:categories)' : ''}
+       GROUP BY locality
+       ORDER BY events DESC
+       LIMIT :limit`,
+      { type: QueryTypes.SELECT, replacements: { since, categories, limit } }
+    );
   }
 
   // --- HU-08: dashboard provincial (admin) ---

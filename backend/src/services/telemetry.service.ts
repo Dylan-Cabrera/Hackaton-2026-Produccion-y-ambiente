@@ -1,7 +1,9 @@
 import { ITelemetryService } from '../interfaces/telemetry-service.interface.js';
 import { ITelemetryRepository } from '../interfaces/telemetry-repository.interface.js';
 import { IProductRepository } from '../interfaces/product-repository.interface.js';
+import { IUserRepository } from '../interfaces/user-repository.interface.js';
 import { TelemetryEventInput } from '../interfaces/telemetry.types.js';
+import { PRODUCT_EVENT_TYPES } from '../constants/telemetry.constants.js';
 import { Category } from '../constants/catalog.constants.js';
 import { CoordinatesTuple } from '../interfaces/geo.types.js';
 import { TelemetryMapper, ResolvedTelemetryContext } from '../mappers/telemetry.mapper.js';
@@ -15,12 +17,13 @@ export class TelemetryService implements ITelemetryService {
 
   constructor(
     private readonly telemetryRepository: ITelemetryRepository,
-    private readonly productRepository: IProductRepository
+    private readonly productRepository: IProductRepository,
+    private readonly userRepository: IUserRepository
   ) {}
 
   async recordEvent(input: TelemetryEventInput, userId: number | null): Promise<void> {
     try {
-      const resolved = await this.resolve(input);
+      const resolved = await this.resolve(input, userId);
       if (!resolved) {
         // Combinación inválida (ej: el producto no pertenece al productor indicado): se
         // descarta en silencio, para no darle a un cliente malicioso pistas sobre otro productor.
@@ -37,28 +40,34 @@ export class TelemetryService implements ITelemetryService {
     await this.telemetryRepository.clearUserActivity(userId);
   }
 
-  private async resolve(input: TelemetryEventInput): Promise<ResolvedTelemetryContext | null> {
+  private async resolve(input: TelemetryEventInput, userId: number | null): Promise<ResolvedTelemetryContext | null> {
     let category = input.category ?? null;
+    let producerId = input.producerId ?? null;
 
-    if (input.eventType === 'WHATSAPP_CLICK' && input.productId) {
+    if (PRODUCT_EVENT_TYPES.includes(input.eventType) && input.productId) {
       const product = await this.productRepository.findById(input.productId);
       if (!product || (input.producerId !== undefined && product.producerId !== input.producerId)) {
         return null;
       }
       category = product.category;
+      producerId = product.producerId;
     }
 
     if (input.eventType === 'SEARCH_HIT' && !category && input.queryTerm) {
       category = await this.inferCategoryFromQuery(input.queryTerm);
     }
 
-    const { locality, coordinates } = this.resolveGeo(input);
-    return { category, locality, coordinates };
+    const { locality, coordinates } = await this.resolveGeo(input, userId);
+    return { category, locality, coordinates, producerId };
   }
 
   // Si viene locality sin coordenadas, usa su centroide. Si vienen coordenadas sin
   // locality, asigna la localidad más cercana. Si vienen ambos, se respetan tal cual.
-  private resolveGeo(input: TelemetryEventInput): { locality: string | null; coordinates: CoordinatesTuple | null } {
+  // Si no viene nada y hay sesión, usa la ubicación del perfil (el usuario no dio permiso de GPS).
+  private async resolveGeo(
+    input: TelemetryEventInput,
+    userId: number | null
+  ): Promise<{ locality: string | null; coordinates: CoordinatesTuple | null }> {
     const hasCoords = input.lat !== undefined && input.lng !== undefined;
 
     if (hasCoords && input.locality) {
@@ -70,6 +79,17 @@ export class TelemetryService implements ITelemetryService {
     if (input.locality) {
       const centroid = localityCentroid(input.locality);
       return { locality: input.locality, coordinates: centroid ? [centroid.lng, centroid.lat] : null };
+    }
+    if (userId !== null) {
+      const user = await this.userRepository.findById(userId);
+      if (user?.coordinates) {
+        const [lng, lat] = user.coordinates.coordinates;
+        return { locality: user.locality ?? nearestLocality(lat, lng), coordinates: [lng, lat] };
+      }
+      if (user?.locality) {
+        const centroid = localityCentroid(user.locality);
+        return { locality: user.locality, coordinates: centroid ? [centroid.lng, centroid.lat] : null };
+      }
     }
     return { locality: null, coordinates: null };
   }

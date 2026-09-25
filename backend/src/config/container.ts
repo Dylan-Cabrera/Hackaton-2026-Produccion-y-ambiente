@@ -50,7 +50,11 @@ export const recommendationService: IRecommendationService = new RecommendationS
   productRepository,
   producerRepository
 );
-export const telemetryService: ITelemetryService = new TelemetryService(telemetryRepository, productRepository);
+export const telemetryService: ITelemetryService = new TelemetryService(
+  telemetryRepository,
+  productRepository,
+  userRepository
+);
 export const needMatchingService: INeedMatchingService = new NeedMatchingService(
   needRepository,
   producerRepository,

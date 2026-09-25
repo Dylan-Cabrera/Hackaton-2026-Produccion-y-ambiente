@@ -1,5 +1,6 @@
 import { Sequelize } from 'sequelize';
 import 'dotenv/config';
+import { EVENT_TYPES } from '../constants/telemetry.constants.js';
 
 const dbName = process.env.DB_NAME ?? 'auth_db';
 const dbUser = process.env.DB_USER ?? 'postgres';
@@ -27,6 +28,12 @@ export const connectDatabase = async (): Promise<void> => {
 
     // Sincroniza los modelos con la base de datos (crea las tablas automáticamente)
     await sequelize.sync();
+
+    // sync() no modifica ENUMs que ya existen: los tipos de evento agregados después de
+    // crear la tabla (ej: PRODUCT_VIEW) hay que sumarlos a mano en bases ya creadas.
+    for (const eventType of EVENT_TYPES) {
+      await sequelize.query(`ALTER TYPE "enum_demand_metrics_eventType" ADD VALUE IF NOT EXISTS '${eventType}';`);
+    }
     console.log('Tablas sincronizadas con la base de datos');
   } catch (error) {
     console.error('Error al conectar con la base de datos:', error);
