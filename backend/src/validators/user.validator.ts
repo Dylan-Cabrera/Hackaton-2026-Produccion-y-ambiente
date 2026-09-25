@@ -1,9 +1,7 @@
 import { body } from 'express-validator';
 import { INSTITUTION_TYPES } from '../constants/catalog.constants.js';
-import { LOCALITIES } from '../constants/localities.constants.js';
+import { LOCALITY_NAMES } from '../constants/localities.constants.js';
 import { coordinatesValidator } from './common.validators.js';
-
-const LOCALITY_NAMES = LOCALITIES.map((locality) => locality.name);
 
 export const updateUserValidator = [
   body('name')

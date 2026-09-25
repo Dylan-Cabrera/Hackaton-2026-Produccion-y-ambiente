@@ -1,10 +1,8 @@
 import { body } from 'express-validator';
 import { ACCOUNT_TYPES } from '../constants/user.constants.js';
 import { CATEGORIES, INSTITUTION_TYPES } from '../constants/catalog.constants.js';
-import { LOCALITIES } from '../constants/localities.constants.js';
+import { LOCALITY_NAMES } from '../constants/localities.constants.js';
 import { coordinatesValidator, stringArrayValidator } from './common.validators.js';
-
-const LOCALITY_NAMES = LOCALITIES.map((locality) => locality.name);
 
 export const registerValidator = [
   // ADMIN no se puede registrar por esta vía

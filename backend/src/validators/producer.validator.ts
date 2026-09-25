@@ -1,9 +1,7 @@
 import { body, param } from 'express-validator';
 import { CATEGORIES } from '../constants/catalog.constants.js';
-import { LOCALITIES } from '../constants/localities.constants.js';
+import { LOCALITY_NAMES } from '../constants/localities.constants.js';
 import { coordinatesValidator, stringArrayValidator } from './common.validators.js';
-
-const LOCALITY_NAMES = LOCALITIES.map((locality) => locality.name);
 
 // PUT /api/producers/profile: campos del emprendimiento + campos de cuenta que
 // se editan en la misma transacción. Todos opcionales (edición parcial).

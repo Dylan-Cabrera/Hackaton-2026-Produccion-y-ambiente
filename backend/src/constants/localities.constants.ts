@@ -12,3 +12,5 @@ export const LOCALITIES = [
 ] as const;
 
 export type LocalityName = (typeof LOCALITIES)[number]['name'];
+
+export const LOCALITY_NAMES = LOCALITIES.map((locality) => locality.name);
