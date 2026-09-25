@@ -19,7 +19,9 @@ export default function LoginForm() {
     setSaving(true);
     try {
       const account = await login(email.trim(), password);
-      navigate(account.role === "PRODUCER" ? "/mis-productos" : "/");
+      if (account.role === "PRODUCER") navigate("/mis-productos");
+      else if (account.role === "ADMIN") navigate("/admin");
+      else navigate("/");
     } catch (err) {
       setError(err.message);
     } finally {

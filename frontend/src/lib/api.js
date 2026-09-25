@@ -223,3 +223,10 @@ export async function getB2BRecommendations(radius) {
   const res = await request(`/api/recommendations/b2b?radius=${radius}`);
   return res.data;
 }
+
+// --- Analítica (dashboard admin, HU-08) ---
+
+export async function getAdminSummary() {
+  const res = await request("/api/analytics/admin-summary");
+  return res.data;
+}

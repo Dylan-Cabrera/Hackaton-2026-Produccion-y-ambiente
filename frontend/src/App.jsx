@@ -13,6 +13,7 @@ import NeedDetailPage from "@/pages/NeedDetailPage";
 import ProducerDemandPage from "@/pages/ProducerDemandPage";
 import ProducerProfilePage from "@/pages/ProducerProfilePage";
 import AccountPage from "@/pages/AccountPage";
+import AdminDashboardPage from "@/pages/AdminDashboardPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 
 export default function App() {
@@ -35,6 +36,7 @@ export default function App() {
           <Route path="/mi-demanda" element={<ProducerDemandPage />} />
           <Route path="/productores/:id" element={<ProducerProfilePage />} />
           <Route path="/cuenta" element={<AccountPage />} />
+          <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </ErrorBoundary>
