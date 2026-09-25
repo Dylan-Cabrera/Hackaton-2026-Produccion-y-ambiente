@@ -176,6 +176,26 @@ const CATEGORY_PRODUCTS: Record<Category, ProductTemplate[]> = {
   ]
 };
 
+// Una foto real por rubro (Wikimedia Commons, licencia libre; se hotlinkea el archivo
+// original, verificado a mano con curl antes de sumarlo acá para no romper la demo con
+// un link caído). No es una foto de cada emprendimiento puntual, pero evita que el
+// catálogo se vea con 84 ícono-de-imagen-rota.
+const IMAGE_BY_CATEGORY: Record<Category, string> = {
+  'Frutas Frescas': 'https://upload.wikimedia.org/wikipedia/commons/e/e7/Banana_fruit_on_white_background.jpg',
+  'Verduras/Hortalizas': 'https://upload.wikimedia.org/wikipedia/commons/4/4e/Kalabasa_%28Calabaza%29_squash_from_the_Philippines.jpg',
+  'Tubérculos/Raíces': 'https://upload.wikimedia.org/wikipedia/commons/e/e0/Yuca_%28Manihot_esculenta%29.jpg',
+  'Dulces/Mermeladas': 'https://upload.wikimedia.org/wikipedia/commons/5/5d/Mermelada_casera.png',
+  'Snacks/Frituras': 'https://upload.wikimedia.org/wikipedia/commons/6/60/Patatas_fritas_de_bolsa.jpg',
+  Apicultura: 'https://upload.wikimedia.org/wikipedia/commons/a/a3/Miel_pura_de_abejas_013.jpg',
+  Aceites: 'https://upload.wikimedia.org/wikipedia/commons/3/33/Bottle_1_liter_Sunflower_refined_oil.jpg',
+  'Envases/Frascos': 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Mason_jar_01.JPG',
+  'Lácteos/Quesos': 'https://upload.wikimedia.org/wikipedia/commons/3/30/Block_of_Muenster_cheese.jpg',
+  'Carnes/Huevos': 'https://upload.wikimedia.org/wikipedia/commons/d/dd/Eggs_in_basket_2020_G1.jpg',
+  Panificados: 'https://upload.wikimedia.org/wikipedia/commons/a/a1/Fresh_made_bread_06.jpg',
+  'Artesanías/Textil': 'https://upload.wikimedia.org/wikipedia/commons/5/5a/Cesto_de_chuspata.jpg',
+  Otros: 'https://upload.wikimedia.org/wikipedia/commons/f/f7/Firewood.jpg'
+};
+
 const PAYMENT_SETS = [['Efectivo'], ['Efectivo', 'Transferencia'], ['Efectivo', 'Transferencia', 'Tarjeta']];
 const DELIVERY_SETS = [
   ['Retiro en el local'],
@@ -377,6 +397,7 @@ async function seed() {
             title: template.title,
             price,
             stockUnit: template.stockUnit,
+            imageUrl: IMAGE_BY_CATEGORY[spec.category],
             ...(isOffer && { isOffer: true, offerPrice: Math.round((price * 0.8) / 10) * 10 })
           },
           spec.category
@@ -634,7 +655,11 @@ async function seed() {
     daysAgo: 12
   });
 
-  await createProduct(producers.get('banado')!.id, { title: 'Queso de Cabra Artesanal x 500g', price: 4700, stockUnit: 'unidad' }, 'Lácteos/Quesos');
+  await createProduct(
+    producers.get('banado')!.id,
+    { title: 'Queso de Cabra Artesanal x 500g', price: 4700, stockUnit: 'unidad', imageUrl: IMAGE_BY_CATEGORY['Lácteos/Quesos'] },
+    'Lácteos/Quesos'
+  );
   console.log('Producto "Queso de Cabra Artesanal x 500g" creado después del historial (motivo NOW_AVAILABLE)');
 
   console.log('\nSeed de 100 cuentas completado.');
