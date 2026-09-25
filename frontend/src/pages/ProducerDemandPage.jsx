@@ -28,7 +28,42 @@ const COLOR_CLICKS = "#d97706";
 
 const PERIODS = [7, 30, 90];
 
-const SERIES_LABELS = { views: "Visitas", clicks: "Contactos por WhatsApp" };
+const SERIES_LABELS = {
+  views: "Visitas",
+  clicks: "Contactos por WhatsApp",
+  found: "Encontraron productos",
+  notFound: "No encontraron nada",
+};
+
+const AXIS_TICK = { fontSize: 12, fill: "var(--color-muted-foreground)" };
+const TOOLTIP_STYLE = { borderRadius: 8, borderColor: "var(--color-border)", fontSize: 13 };
+
+// Recharts ordena la leyenda alfabéticamente: se fuerza el mismo orden que las barras
+const SERIES_ORDER = ["views", "clicks", "found", "notFound"];
+const sortLegend = (item) => SERIES_ORDER.indexOf(item.dataKey);
+
+// Lunes primero (así se piensa la semana acá); getDay() devuelve 0 = domingo
+const WEEKDAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+const WEEKDAY_NAMES = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábados", "domingos"];
+
+function listJoin(items) {
+  return items.length <= 1 ? items.join("") : `${items.slice(0, -1).join(", ")} y ${items.at(-1)}`;
+}
+
+function byWeekday(dailyActivity) {
+  const totals = WEEKDAYS.map((day) => ({ day, views: 0, clicks: 0 }));
+  for (const d of dailyActivity) {
+    const [year, month, day] = d.date.split("-").map(Number);
+    const index = (new Date(year, month - 1, day).getDay() + 6) % 7;
+    totals[index].views += d.views;
+    totals[index].clicks += d.clicks;
+  }
+  return totals;
+}
+
+function shorten(text, max = 22) {
+  return text.length > max ? `${text.slice(0, max - 1)}…` : text;
+}
 
 function formatDay(isoDate) {
   const [, month, day] = isoDate.split("-");
@@ -68,7 +103,7 @@ export default function ProducerDemandPage() {
   const [retryTick, setRetryTick] = useState(0);
 
   useEffect(() => {
-    document.title = "Demanda de mi negocio · Mercado Km 0";
+    document.title = "Demanda de mi negocio · Formosa Unida";
   }, []);
 
   useEffect(() => {
@@ -163,7 +198,14 @@ export default function ProducerDemandPage() {
     summary;
   const totalConversion = conversion(totals.productViews, totals.whatsappClicks);
   const hasActivity = dailyActivity.some((d) => d.views > 0 || d.clicks > 0);
-  const maxProductViews = Math.max(1, ...productPerformance.map((p) => Math.max(p.views, p.clicks)));
+  const productChart = productPerformance.map((p) => ({ name: p.title, views: p.views, clicks: p.clicks }));
+  const hasProductActivity = productPerformance.some((p) => p.views > 0 || p.clicks > 0);
+  const weekdayChart = byWeekday(dailyActivity);
+  const busiestTotal = Math.max(...weekdayChart.map((d) => d.views + d.clicks));
+  const busiestDays = listJoin(
+    weekdayChart.flatMap((d, i) => (d.views + d.clicks === busiestTotal ? [WEEKDAY_NAMES[i]] : [])),
+  );
+  const termsChart = topTerms.map((t) => ({ name: t.term, found: t.count - t.fails, notFound: t.fails }));
   const maxLocalityEvents = Math.max(1, ...demandByLocality.map((l) => l.events));
   const localityChart = clicksByLocality.map((c) => ({ name: c.locality, clics: c.clicks }));
 
@@ -230,7 +272,7 @@ export default function ProducerDemandPage() {
                   formatter={(value, name) => [value, SERIES_LABELS[name] ?? name]}
                   contentStyle={{ borderRadius: 8, borderColor: "var(--color-border)", fontSize: 13 }}
                 />
-                <Legend formatter={(name) => SERIES_LABELS[name] ?? name} iconType="circle" />
+                <Legend formatter={(name) => SERIES_LABELS[name] ?? name} itemSorter={sortLegend} iconType="circle" />
                 <Area
                   type="monotone"
                   dataKey="views"
@@ -253,66 +295,102 @@ export default function ProducerDemandPage() {
         )}
       </Section>
 
-      <Section
-        title="Tus productos"
-        description="Cuántos lo vieron y cuántos de esos te escribieron"
-        action={
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <span className="size-2.5 rounded-full" style={{ background: COLOR_VIEWS }} />
-              Visitas
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="size-2.5 rounded-full" style={{ background: COLOR_CLICKS }} />
-              Contactos
-            </span>
-          </div>
-        }
-      >
+      <Section title="Tus productos" description="Cuántos lo vieron y cuántos de esos te escribieron">
         {productPerformance.length === 0 ? (
           <p className="py-6 text-center text-sm text-muted-foreground">Todavía no publicaste productos.</p>
         ) : (
-          <ul className="divide-y divide-border">
-            {productPerformance.map((p) => {
-              const rate = conversion(p.views, p.clicks);
-              return (
-                <li key={p.productId} className="grid gap-2 py-3 sm:grid-cols-[minmax(0,14rem)_1fr_auto] sm:items-center sm:gap-4">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{p.title}</p>
-                    {!p.available && <p className="text-xs text-muted-foreground">Pausado</p>}
-                  </div>
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 flex-1 rounded-full bg-muted">
-                        <div
-                          className="h-2 rounded-full"
-                          style={{ width: `${(p.views / maxProductViews) * 100}%`, background: COLOR_VIEWS }}
-                        />
-                      </div>
-                      <span className="w-20 text-right text-xs text-muted-foreground">{p.views} visitas</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 flex-1 rounded-full bg-muted">
-                        <div
-                          className="h-2 rounded-full"
-                          style={{ width: `${(p.clicks / maxProductViews) * 100}%`, background: COLOR_CLICKS }}
-                        />
-                      </div>
-                      <span className="w-20 text-right text-xs text-muted-foreground">{p.clicks} contactos</span>
-                    </div>
-                  </div>
-                  <span
-                    className="text-sm font-semibold sm:w-24 sm:text-right"
-                    title="Porcentaje de visitas que terminaron en un contacto por WhatsApp"
-                  >
-                    {rate !== null ? `${rate}% conversión` : "—"}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
+          <>
+            {hasProductActivity && (
+              <div style={{ height: Math.max(200, productChart.length * 64) }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={productChart} layout="vertical" margin={{ left: 8, right: 16 }} barGap={2}>
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--color-border)" />
+                    <XAxis type="number" allowDecimals={false} tick={AXIS_TICK} tickLine={false} axisLine={false} />
+                    <YAxis
+                      type="category"
+                      dataKey="name"
+                      width={190}
+                      tick={AXIS_TICK}
+                      tickFormatter={(name) => shorten(name, 26)}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <Tooltip
+                      formatter={(value, name) => [value, SERIES_LABELS[name] ?? name]}
+                      cursor={{ fill: "var(--color-muted)" }}
+                      contentStyle={TOOLTIP_STYLE}
+                    />
+                    <Legend formatter={(name) => SERIES_LABELS[name] ?? name} itemSorter={sortLegend} iconType="circle" />
+                    <Bar dataKey="views" fill={COLOR_VIEWS} radius={[0, 4, 4, 0]} barSize={14} />
+                    <Bar dataKey="clicks" fill={COLOR_CLICKS} radius={[0, 4, 4, 0]} barSize={14} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border text-left text-xs text-muted-foreground">
+                    <th className="py-2 pr-3 font-medium">Producto</th>
+                    <th className="py-2 pr-3 text-right font-medium">Visitas</th>
+                    <th className="py-2 pr-3 text-right font-medium">Contactos</th>
+                    <th
+                      className="py-2 text-right font-medium"
+                      title="Porcentaje de visitas que terminaron en un contacto por WhatsApp"
+                    >
+                      Conversión
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {productPerformance.map((p) => {
+                    const rate = conversion(p.views, p.clicks);
+                    return (
+                      <tr key={p.productId}>
+                        <td className="py-2 pr-3">
+                          {p.title}
+                          {!p.available && <span className="ml-2 text-xs text-muted-foreground">(pausado)</span>}
+                        </td>
+                        <td className="py-2 pr-3 text-right tabular-nums">{p.views}</td>
+                        <td className="py-2 pr-3 text-right tabular-nums">{p.clicks}</td>
+                        <td className="py-2 text-right font-semibold tabular-nums">
+                          {rate !== null ? `${rate}%` : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </Section>
+
+      {hasActivity && (
+        <Section
+          title="Qué días te buscan más"
+          description={`Visitas y contactos sumados por día de la semana · te buscan más los ${busiestDays}`}
+        >
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={weekdayChart} margin={{ top: 8, right: 8, left: -16, bottom: 0 }} barGap={2}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
+                <XAxis dataKey="day" tick={AXIS_TICK} tickLine={false} axisLine={false} />
+                <YAxis allowDecimals={false} tick={AXIS_TICK} tickLine={false} axisLine={false} />
+                <Tooltip
+                  formatter={(value, name) => [value, SERIES_LABELS[name] ?? name]}
+                  cursor={{ fill: "var(--color-muted)" }}
+                  contentStyle={TOOLTIP_STYLE}
+                />
+                <Legend formatter={(name) => SERIES_LABELS[name] ?? name} itemSorter={sortLegend} iconType="circle" />
+                <Bar dataKey="views" fill={COLOR_VIEWS} radius={[4, 4, 0, 0]} maxBarSize={28} />
+                <Bar dataKey="clicks" fill={COLOR_CLICKS} radius={[4, 4, 0, 0]} maxBarSize={28} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Section>
+      )}
 
       <Section
         title="Dónde se busca lo tuyo"
@@ -369,17 +447,44 @@ export default function ProducerDemandPage() {
       )}
 
       {topTerms.length > 0 && (
-        <Section title="Lo más buscado de tu rubro">
-          <ul className="space-y-1 text-sm">
-            {topTerms.map((t) => (
-              <li key={t.term} className="flex items-center justify-between">
-                <span>{t.term}</span>
-                <span className="text-muted-foreground">
-                  {t.count} búsquedas{t.fails > 0 && ` · ${t.fails} sin resultados`}
-                </span>
-              </li>
-            ))}
-          </ul>
+        <Section
+          title="Lo más buscado de tu rubro"
+          description="Lo naranja son búsquedas que no encontraron nada: gente que quiere comprar y no encuentra quién venda"
+        >
+          <div style={{ height: Math.max(180, termsChart.length * 40) }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={termsChart} layout="vertical" margin={{ left: 8, right: 16 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--color-border)" />
+                <XAxis type="number" allowDecimals={false} tick={AXIS_TICK} tickLine={false} axisLine={false} />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  width={130}
+                  tick={AXIS_TICK}
+                  tickFormatter={(name) => shorten(name, 18)}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip
+                  formatter={(value, name) => [value, SERIES_LABELS[name] ?? name]}
+                  cursor={{ fill: "var(--color-muted)" }}
+                  contentStyle={TOOLTIP_STYLE}
+                />
+                <Legend formatter={(name) => SERIES_LABELS[name] ?? name} itemSorter={sortLegend} iconType="circle" />
+                {/* stroke del color de la tarjeta: separa los dos tramos apilados */}
+                <Bar dataKey="found" stackId="terms" fill={COLOR_VIEWS} stroke="var(--color-card)" strokeWidth={2} barSize={18} />
+                <Bar
+                  dataKey="notFound"
+                  stackId="terms"
+                  fill={COLOR_CLICKS}
+                  stroke="var(--color-card)"
+                  strokeWidth={2}
+                  radius={[0, 4, 4, 0]}
+                  barSize={18}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </Section>
       )}
 

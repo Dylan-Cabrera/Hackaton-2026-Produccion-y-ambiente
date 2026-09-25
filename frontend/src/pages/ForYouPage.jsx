@@ -25,7 +25,7 @@ export default function ForYouPage() {
   const [retryTick, setRetryTick] = useState(0);
 
   useEffect(() => {
-    document.title = "Para vos · Mercado Km 0";
+    document.title = "Para vos · Formosa Unida";
   }, []);
 
   useEffect(() => {

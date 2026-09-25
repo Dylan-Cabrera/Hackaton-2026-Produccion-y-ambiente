@@ -16,7 +16,7 @@ export default function AdminDashboardPage() {
   const [retryTick, setRetryTick] = useState(0);
 
   useEffect(() => {
-    document.title = "Dashboard admin · Mercado Km 0";
+    document.title = "Dashboard admin · Formosa Unida";
   }, []);
 
   useEffect(() => {

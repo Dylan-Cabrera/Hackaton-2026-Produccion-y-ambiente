@@ -33,7 +33,7 @@ export default function NeedDetailPage() {
   }, [id]);
 
   useEffect(() => {
-    if (need) document.title = `${need.title} · Mercado Km 0`;
+    if (need) document.title = `${need.title} · Formosa Unida`;
   }, [need]);
 
   async function handleStatusChange(status) {

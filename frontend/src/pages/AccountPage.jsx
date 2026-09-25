@@ -31,7 +31,7 @@ export default function AccountPage() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    document.title = "Mi cuenta · Mercado Km 0";
+    document.title = "Mi cuenta · Formosa Unida";
   }, []);
 
   useEffect(() => {
