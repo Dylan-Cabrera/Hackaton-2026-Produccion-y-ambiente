@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import CatalogFeed from "@/components/CatalogFeed";
 import ErrorState from "@/components/ErrorState";
 import { ProductCardSkeletonGrid } from "@/components/ProductCardSkeleton";
+import ProducerInventoryList from "@/components/ProducerInventoryList";
 import ProducerProfileCard from "@/components/ProducerProfileCard";
 import ProducerProfileEditForm from "@/components/ProducerProfileEditForm";
 import ProductCreateModal from "@/components/ProductCreateModal";
-import ProductDetailView from "@/components/ProductDetailView";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { getMyProducts } from "@/lib/api";
@@ -15,7 +14,6 @@ export default function MyProductsPage() {
   const { user, status } = useAuth();
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
-  const [selected, setSelected] = useState(null);
   const [editing, setEditing] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [error, setError] = useState(null);
@@ -52,19 +50,13 @@ export default function MyProductsPage() {
     );
   }
 
-  const items = products.map((product) => ({
-    product,
-    producer: user,
-    distanceKm: null,
-  }));
-
   return (
     <main className="mx-auto max-w-5xl space-y-6 px-4 py-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Mis productos</h1>
           <p className="text-muted-foreground">
-            Publicá rápido y marcá los excedentes como oferta.
+            Publicá rápido, marcá los excedentes como oferta y pausá lo que se te acabó.
           </p>
         </div>
         <ProductCreateModal
@@ -96,10 +88,13 @@ export default function MyProductsPage() {
           onRetry={() => setRetryTick((t) => t + 1)}
         />
       ) : (
-        <CatalogFeed items={items} onSelect={setSelected} />
+        <ProducerInventoryList
+          products={products}
+          onChange={(updated) =>
+            setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
+          }
+        />
       )}
-
-      <ProductDetailView item={selected} onClose={() => setSelected(null)} />
     </main>
   );
 }
