@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { CircleMarker, MapContainer, Popup, TileLayer, useMap } from "react-leaflet";
+import { Link } from "react-router-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet.heat";
@@ -124,26 +125,50 @@ export default function VacancyMap() {
           gradient={{ 0.3: "#fecaca", 0.6: "#ef4444", 1: "#b91c1c" }}
         />
 
-        {/* Marcadores chicos y translúcidos encima del calor, solo para poder ver el detalle al tocar */}
+        {/* Marcadores chicos y translúcidos encima del calor: al hacer click despliegan la
+            publicación real (perfil del productor o detalle de la necesidad), no solo el nombre. */}
         {supply.map((producer) => (
           <CircleMarker
             key={`supply-${producer.id}`}
             center={toLatLng(producer.coordinates)}
-            radius={4}
+            radius={6}
             pathOptions={{ color: "#059669", fillColor: "#10b981", fillOpacity: 0.9, weight: 1 }}
           >
-            <Popup>{producer.businessName}</Popup>
+            <Popup>
+              <div className="space-y-1">
+                <p className="font-semibold">{producer.businessName}</p>
+                {producer.locality && <p className="text-xs text-muted-foreground">{producer.locality}</p>}
+                <Link
+                  to={`/productores/${producer.id}`}
+                  className="text-sm font-medium text-emerald-700 underline underline-offset-2"
+                >
+                  Ver perfil y productos →
+                </Link>
+              </div>
+            </Popup>
           </CircleMarker>
         ))}
         {demand.map((need) => (
           <CircleMarker
             key={`demand-${need.id}`}
             center={toLatLng(need.coordinates)}
-            radius={4}
+            radius={6}
             pathOptions={{ color: "#b91c1c", fillColor: "#ef4444", fillOpacity: 0.9, weight: 1 }}
           >
             <Popup>
-              {need.title} — {need.quantity} {need.unit} ({need.category})
+              <div className="space-y-1">
+                <p className="font-semibold">{need.title}</p>
+                <p className="text-xs text-muted-foreground">
+                  {need.quantity} {need.unit} · {need.category}
+                  {need.locality ? ` · ${need.locality}` : ""}
+                </p>
+                <Link
+                  to={`/necesidades/${need.id}`}
+                  className="text-sm font-medium text-red-700 underline underline-offset-2"
+                >
+                  Ver publicación completa →
+                </Link>
+              </div>
             </Popup>
           </CircleMarker>
         ))}
