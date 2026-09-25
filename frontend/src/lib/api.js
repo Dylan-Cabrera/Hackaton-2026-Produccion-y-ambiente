@@ -303,6 +303,12 @@ export async function getDemandHeat({ category, days = 30 } = {}) {
   return res.data;
 }
 
+// Tendencias generales de toda la plataforma (público, solo datos agregados)
+export async function getTrends(days = 30) {
+  const res = await request(`/api/analytics/trends?days=${days}`);
+  return res.data;
+}
+
 // HU-08: resumen provincial (admin)
 export async function getAdminSummary() {
   const res = await request("/api/analytics/admin-summary");

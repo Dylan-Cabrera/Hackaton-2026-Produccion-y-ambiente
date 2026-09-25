@@ -25,6 +25,24 @@ export class AnalyticsController {
     }
   };
 
+  // GET /api/analytics/trends (público)
+  trends = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const { days } = req.query;
+
+      const result = await this.analyticsService.getTrends({
+        days: days as unknown as number | undefined
+      });
+
+      return res.status(200).json({
+        message: 'Tendencias obtenidas exitosamente',
+        data: result
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   // GET /api/analytics/demand-heat (público)
   demandHeat = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {

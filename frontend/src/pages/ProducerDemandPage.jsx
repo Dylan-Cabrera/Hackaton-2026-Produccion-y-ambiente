@@ -13,18 +13,16 @@ import {
   YAxis,
 } from "recharts";
 import B2BSupplyRecommendations from "@/components/B2BSupplyRecommendations";
+import DashboardSection from "@/components/DashboardSection";
 import DemandHeatMap, { DemandLegend } from "@/components/DemandHeatMap";
 import ErrorState from "@/components/ErrorState";
 import KpiCard from "@/components/KpiCard";
 import Skeleton from "@/components/Skeleton";
 import { useAuth } from "@/context/AuthContext";
 import { getNeeds, getProducerDemand } from "@/lib/api";
+import { AXIS_TICK, COLOR_CLICKS, COLOR_VIEWS, TOOLTIP_STYLE } from "@/lib/chartColors";
 import { cn } from "@/lib/utils";
 
-// Validado con el validador de paleta (dataviz): verde/ámbar pasan contraste y visión normal;
-// en protanopía quedan cerca (ΔE 6.6), por eso siempre van con leyenda, tooltip y números.
-const COLOR_VIEWS = "#2e7d32";
-const COLOR_CLICKS = "#d97706";
 
 const PERIODS = [7, 30, 90];
 
@@ -35,8 +33,6 @@ const SERIES_LABELS = {
   notFound: "No encontraron nada",
 };
 
-const AXIS_TICK = { fontSize: 12, fill: "var(--color-muted-foreground)" };
-const TOOLTIP_STYLE = { borderRadius: 8, borderColor: "var(--color-border)", fontSize: 13 };
 
 // Recharts ordena la leyenda alfabéticamente: se fuerza el mismo orden que las barras
 const SERIES_ORDER = ["views", "clicks", "found", "notFound"];
@@ -75,20 +71,6 @@ function conversion(views, clicks) {
   return Math.round((clicks / views) * 100);
 }
 
-function Section({ title, description, action, children }) {
-  return (
-    <section className="rounded-xl border border-border bg-card p-4 sm:p-5">
-      <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <h2 className="font-semibold">{title}</h2>
-          {description && <p className="text-sm text-muted-foreground">{description}</p>}
-        </div>
-        {action}
-      </div>
-      {children}
-    </section>
-  );
-}
 
 // HU-07: qué genera interés (visitas y contactos de tus productos, dónde se busca lo tuyo,
 // términos de tu rubro) y qué te están pidiendo (necesidades abiertas de tu mismo rubro).
@@ -232,7 +214,7 @@ export default function ProducerDemandPage() {
         />
       </div>
 
-      <Section title="Visitas y contactos por día" description={`Últimos ${summary.days} días`}>
+      <DashboardSection title="Visitas y contactos por día" description={`Últimos ${summary.days} días`}>
         {!hasActivity ? (
           <p className="py-10 text-center text-sm text-muted-foreground">
             Todavía no hay visitas ni contactos en este período. Se registran cuando alguien abre uno de
@@ -293,9 +275,9 @@ export default function ProducerDemandPage() {
             </ResponsiveContainer>
           </div>
         )}
-      </Section>
+      </DashboardSection>
 
-      <Section title="Tus productos" description="Cuántos lo vieron y cuántos de esos te escribieron">
+      <DashboardSection title="Tus productos" description="Cuántos lo vieron y cuántos de esos te escribieron">
         {productPerformance.length === 0 ? (
           <p className="py-6 text-center text-sm text-muted-foreground">Todavía no publicaste productos.</p>
         ) : (
@@ -365,10 +347,10 @@ export default function ProducerDemandPage() {
             </div>
           </>
         )}
-      </Section>
+      </DashboardSection>
 
       {hasActivity && (
-        <Section
+        <DashboardSection
           title="Qué días te buscan más"
           description={`Visitas y contactos sumados por día de la semana · te buscan más los ${busiestDays}`}
         >
@@ -389,10 +371,10 @@ export default function ProducerDemandPage() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </Section>
+        </DashboardSection>
       )}
 
-      <Section
+      <DashboardSection
         title="Dónde se busca lo tuyo"
         description={`Búsquedas, visitas y contactos de ${user.category} en la provincia`}
         action={<DemandLegend />}
@@ -428,10 +410,10 @@ export default function ProducerDemandPage() {
             </p>
           </div>
         </div>
-      </Section>
+      </DashboardSection>
 
       {localityChart.length > 0 && (
-        <Section title="De dónde te escriben" description="Contactos por WhatsApp según la localidad del cliente">
+        <DashboardSection title="De dónde te escriben" description="Contactos por WhatsApp según la localidad del cliente">
           <div style={{ height: Math.max(160, localityChart.length * 44) }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={localityChart} layout="vertical" margin={{ left: 8, right: 16 }}>
@@ -443,11 +425,11 @@ export default function ProducerDemandPage() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </Section>
+        </DashboardSection>
       )}
 
       {topTerms.length > 0 && (
-        <Section
+        <DashboardSection
           title="Lo más buscado de tu rubro"
           description="Lo naranja son búsquedas que no encontraron nada: gente que quiere comprar y no encuentra quién venda"
         >
@@ -485,11 +467,11 @@ export default function ProducerDemandPage() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </Section>
+        </DashboardSection>
       )}
 
       {openNeeds.length > 0 && (
-        <Section title={`Necesidades de ${user.category} que podrías cubrir`}>
+        <DashboardSection title={`Necesidades de ${user.category} que podrías cubrir`}>
           <ul className="space-y-2 text-sm">
             {openNeeds.map((need) => (
               <li key={need.id} className="flex items-center justify-between gap-2">
@@ -502,7 +484,7 @@ export default function ProducerDemandPage() {
               </li>
             ))}
           </ul>
-        </Section>
+        </DashboardSection>
       )}
 
       <B2BSupplyRecommendations />

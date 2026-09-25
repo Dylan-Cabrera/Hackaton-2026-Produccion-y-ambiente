@@ -16,3 +16,5 @@ export const unmetDemandMapValidator = [
   daysValidator,
   query('category').optional().isIn(CATEGORIES).withMessage('category no es válida')
 ];
+
+export const trendsValidator = [daysValidator];

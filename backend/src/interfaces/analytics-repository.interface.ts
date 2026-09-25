@@ -9,7 +9,12 @@ import {
   Opportunity,
   DailyActivity,
   ProductPerformance,
-  LocalityDemand
+  LocalityDemand,
+  TrendsTotals,
+  PlatformDailyActivity,
+  CategoryTrend,
+  TrendingProduct,
+  UnmetTerm
 } from './analytics.types.js';
 
 // Abstracción de las consultas agregadas sobre `demand_metrics` (Dependency Inversion):
@@ -43,4 +48,11 @@ export interface IAnalyticsRepository {
   getSupply(category?: Category): Promise<SupplyPoint[]>;
   getUnmetHeat(since: Date, category?: Category): Promise<HeatCell[]>;
   getOpportunities(since: Date, category: Category | undefined, limit: number): Promise<Opportunity[]>;
+
+  // --- Tendencias públicas (toda la plataforma) ---
+  getTrendsTotals(since: Date): Promise<TrendsTotals>;
+  getPlatformDailyActivity(days: number): Promise<PlatformDailyActivity[]>;
+  getCategoryTrends(since: Date): Promise<CategoryTrend[]>;
+  getTrendingProducts(since: Date, limit: number): Promise<TrendingProduct[]>;
+  getTopUnmetTerms(since: Date, limit: number): Promise<UnmetTerm[]>;
 }

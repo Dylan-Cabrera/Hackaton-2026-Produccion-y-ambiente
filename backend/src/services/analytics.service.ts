@@ -12,7 +12,9 @@ import {
   UnmetDemandMapOptions,
   UnmetDemandMapResponse,
   DemandHeatOptions,
-  DemandHeatResponse
+  DemandHeatResponse,
+  TrendsOptions,
+  TrendsResponse
 } from '../interfaces/analytics.types.js';
 import { UnmetNeed } from '../interfaces/analytics.types.js';
 import { NeedWithAuthorRecord } from '../interfaces/need.types.js';
@@ -29,6 +31,8 @@ export class AnalyticsService implements IAnalyticsService {
   private static readonly TOP_CATEGORIES_LIMIT = 10;
   private static readonly OPPORTUNITIES_LIMIT = 10;
   private static readonly TOP_LOCALITIES_LIMIT = 8;
+  // Cuántos ítems muestra cada ranking de la página de tendencias
+  private static readonly TRENDS_LIMIT = 10;
 
   constructor(
     private readonly analyticsRepository: IAnalyticsRepository,
@@ -99,6 +103,26 @@ export class AnalyticsService implements IAnalyticsService {
   }
 
   // Caso de uso "dashboard provincial" (HU-08): panorama agregado de toda la plataforma para el admin.
+  // Caso de uso "tendencias" (público): qué se busca, qué se mira, qué se consulta y qué se pide
+  // en toda la plataforma. Todo agregado: sirve a productores para decidir qué producir y a
+  // compradores para ver qué se mueve, sin exponer la actividad de ninguna persona.
+  async getTrends(options: TrendsOptions): Promise<TrendsResponse> {
+    const days = options.days ?? AnalyticsService.DEFAULT_DAYS;
+    const since = new Date(Date.now() - days * MS_PER_DAY);
+
+    const [totals, daily, categories, topProducts, topTerms, unmetTerms, localities] = await Promise.all([
+      this.analyticsRepository.getTrendsTotals(since),
+      this.analyticsRepository.getPlatformDailyActivity(days),
+      this.analyticsRepository.getCategoryTrends(since),
+      this.analyticsRepository.getTrendingProducts(since, AnalyticsService.TRENDS_LIMIT),
+      this.analyticsRepository.getTopTermsGlobal(since, AnalyticsService.TRENDS_LIMIT),
+      this.analyticsRepository.getTopUnmetTerms(since, AnalyticsService.TRENDS_LIMIT),
+      this.analyticsRepository.getDemandByLocality(since, undefined, AnalyticsService.TRENDS_LIMIT)
+    ]);
+
+    return { days, totals, daily, categories, topProducts, topTerms, unmetTerms, localities };
+  }
+
   async getAdminSummary(options: AdminAnalyticsOptions): Promise<AdminSummaryResponse> {
     const days = options.days ?? AnalyticsService.DEFAULT_DAYS;
     const since = new Date(Date.now() - days * MS_PER_DAY);

@@ -28,6 +28,9 @@ export default function SiteNav() {
         <NavLink to="/mapa" className={linkClass}>
           Mapa
         </NavLink>
+        <NavLink to="/tendencias" className={linkClass}>
+          Tendencias
+        </NavLink>
         <NavLink to="/necesidades" className={linkClass}>
           Necesidades
         </NavLink>

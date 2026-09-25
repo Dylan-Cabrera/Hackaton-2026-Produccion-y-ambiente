@@ -6,7 +6,9 @@ import {
   UnmetDemandMapOptions,
   UnmetDemandMapResponse,
   DemandHeatOptions,
-  DemandHeatResponse
+  DemandHeatResponse,
+  TrendsOptions,
+  TrendsResponse
 } from './analytics.types.js';
 
 export interface IAnalyticsService {
@@ -14,4 +16,5 @@ export interface IAnalyticsService {
   getProducerDemand(producerId: number, options: ProducerDemandOptions): Promise<ProducerDemandResponse>;
   getAdminSummary(options: AdminAnalyticsOptions): Promise<AdminSummaryResponse>;
   getUnmetDemandMap(options: UnmetDemandMapOptions): Promise<UnmetDemandMapResponse>;
+  getTrends(options: TrendsOptions): Promise<TrendsResponse>;
 }

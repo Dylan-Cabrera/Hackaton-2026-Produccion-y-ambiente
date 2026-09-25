@@ -12,7 +12,12 @@ import {
   Opportunity,
   DailyActivity,
   ProductPerformance,
-  LocalityDemand
+  LocalityDemand,
+  TrendsTotals,
+  PlatformDailyActivity,
+  CategoryTrend,
+  TrendingProduct,
+  UnmetTerm
 } from '../interfaces/analytics.types.js';
 
 // Única clase que conoce Sequelize/SQL crudo para las consultas agregadas de analítica.
@@ -156,6 +161,122 @@ export class SequelizeAnalyticsRepository implements IAnalyticsRepository {
        ORDER BY events DESC
        LIMIT :limit`,
       { type: QueryTypes.SELECT, replacements: { since, categories, limit } }
+    );
+  }
+
+  // --- Tendencias públicas (toda la plataforma, solo agregados) ---
+
+  async getTrendsTotals(since: Date): Promise<TrendsTotals> {
+    const [row] = await sequelize.query<TrendsTotals>(
+      `SELECT
+         COUNT(*) FILTER (WHERE "eventType" IN ('SEARCH_HIT', 'SEARCH_FAIL') AND "timestamp" >= :since)::int AS "searches",
+         COUNT(*) FILTER (WHERE "eventType" = 'SEARCH_FAIL' AND "timestamp" >= :since)::int AS "searchFails",
+         COUNT(*) FILTER (WHERE "eventType" = 'PRODUCT_VIEW' AND "timestamp" >= :since)::int AS "views",
+         COUNT(*) FILTER (WHERE "eventType" = 'WHATSAPP_CLICK' AND "timestamp" >= :since)::int AS "contacts",
+         (SELECT COUNT(*)::int FROM needs WHERE status = 'OPEN') AS "openNeeds"
+       FROM demand_metrics`,
+      { type: QueryTypes.SELECT, replacements: { since } }
+    );
+
+    return row;
+  }
+
+  async getPlatformDailyActivity(days: number): Promise<PlatformDailyActivity[]> {
+    return sequelize.query<PlatformDailyActivity>(
+      `WITH period AS (
+         SELECT generate_series(
+                  (now() AT TIME ZONE :tz)::date - (:days - 1),
+                  (now() AT TIME ZONE :tz)::date,
+                  interval '1 day'
+                )::date AS day
+       )
+       SELECT to_char(p.day, 'YYYY-MM-DD') AS date,
+              COUNT(m.id) FILTER (WHERE m."eventType" IN ('SEARCH_HIT', 'SEARCH_FAIL'))::int AS searches,
+              COUNT(m.id) FILTER (WHERE m."eventType" = 'PRODUCT_VIEW')::int AS views,
+              COUNT(m.id) FILTER (WHERE m."eventType" = 'WHATSAPP_CLICK')::int AS contacts
+       FROM period p
+       LEFT JOIN demand_metrics m
+         ON (m."timestamp" AT TIME ZONE :tz)::date = p.day
+       GROUP BY p.day
+       ORDER BY p.day`,
+      { type: QueryTypes.SELECT, replacements: { days, tz: SequelizeAnalyticsRepository.TIME_ZONE } }
+    );
+  }
+
+  // Cada tabla tiene su propio tipo ENUM de categoría: se comparan como texto
+  async getCategoryTrends(since: Date): Promise<CategoryTrend[]> {
+    return sequelize.query<CategoryTrend>(
+      `WITH events AS (
+         SELECT category::text AS category,
+                SUM(${SequelizeAnalyticsRepository.DEMAND_WEIGHT_SQL})::int AS demand,
+                COUNT(*) FILTER (WHERE "eventType" IN ('SEARCH_HIT', 'SEARCH_FAIL'))::int AS searches,
+                COUNT(*) FILTER (WHERE "eventType" = 'PRODUCT_VIEW')::int AS views,
+                COUNT(*) FILTER (WHERE "eventType" = 'WHATSAPP_CLICK')::int AS contacts
+         FROM demand_metrics
+         WHERE category IS NOT NULL AND "timestamp" >= :since
+         GROUP BY 1
+       ),
+       offer AS (
+         SELECT category::text AS category, COUNT(*)::int AS products
+         FROM products
+         WHERE available = true
+         GROUP BY 1
+       ),
+       requests AS (
+         SELECT category::text AS category, COUNT(*)::int AS needs
+         FROM needs
+         WHERE status = 'OPEN'
+         GROUP BY 1
+       ),
+       all_categories AS (
+         SELECT category FROM events UNION SELECT category FROM offer UNION SELECT category FROM requests
+       )
+       SELECT c.category,
+              COALESCE(e.demand, 0) AS demand,
+              COALESCE(e.searches, 0) AS searches,
+              COALESCE(e.views, 0) AS views,
+              COALESCE(e.contacts, 0) AS contacts,
+              COALESCE(o.products, 0) AS "availableProducts",
+              COALESCE(r.needs, 0) AS "openNeeds"
+       FROM all_categories c
+       LEFT JOIN events e ON e.category = c.category
+       LEFT JOIN offer o ON o.category = c.category
+       LEFT JOIN requests r ON r.category = c.category
+       ORDER BY demand DESC, "openNeeds" DESC, c.category`,
+      { type: QueryTypes.SELECT, replacements: { since } }
+    );
+  }
+
+  async getTrendingProducts(since: Date, limit: number): Promise<TrendingProduct[]> {
+    return sequelize.query<TrendingProduct>(
+      `SELECT p.id AS "productId", p.title, pp."businessName" AS "businessName", p.category,
+              COUNT(m.id) FILTER (WHERE m."eventType" = 'PRODUCT_VIEW')::int AS views,
+              COUNT(m.id) FILTER (WHERE m."eventType" = 'WHATSAPP_CLICK')::int AS contacts
+       FROM products p
+       INNER JOIN producer_profiles pp ON pp."userId" = p."producerId"
+       INNER JOIN demand_metrics m
+         ON m."productId" = p.id
+        AND m."eventType" IN ('PRODUCT_VIEW', 'WHATSAPP_CLICK')
+        AND m."timestamp" >= :since
+       WHERE p.available = true
+       GROUP BY p.id, pp."businessName"
+       ORDER BY SUM(${SequelizeAnalyticsRepository.DEMAND_WEIGHT_SQL.replace('"eventType"', 'm."eventType"')}) DESC, p.title
+       LIMIT :limit`,
+      { type: QueryTypes.SELECT, replacements: { since, limit } }
+    );
+  }
+
+  async getTopUnmetTerms(since: Date, limit: number): Promise<UnmetTerm[]> {
+    return sequelize.query<UnmetTerm>(
+      `SELECT "queryTerm" AS term, COUNT(*)::int AS fails
+       FROM demand_metrics
+       WHERE "eventType" = 'SEARCH_FAIL'
+         AND "queryTerm" IS NOT NULL
+         AND "timestamp" >= :since
+       GROUP BY "queryTerm"
+       ORDER BY fails DESC, term
+       LIMIT :limit`,
+      { type: QueryTypes.SELECT, replacements: { since, limit } }
     );
   }
 

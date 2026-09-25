@@ -151,3 +151,60 @@ export interface UnmetDemandMapResponse {
   unmetNeeds: UnmetNeed[];
   opportunities: Opportunity[];
 }
+
+// --- GET /api/analytics/trends (público): tendencias generales de toda la plataforma ---
+// Solo agregados (conteos por día, rubro, producto, término y localidad), nunca datos por usuario.
+export interface TrendsOptions {
+  days?: number;
+}
+
+export interface TrendsTotals {
+  searches: number;
+  searchFails: number;
+  views: number;
+  contacts: number;
+  openNeeds: number;
+}
+
+export interface PlatformDailyActivity {
+  date: string; // YYYY-MM-DD
+  searches: number;
+  views: number;
+  contacts: number;
+}
+
+// Demanda de un rubro frente a lo que hay publicado y a lo que se está pidiendo
+export interface CategoryTrend {
+  category: Category;
+  demand: number; // señales ponderadas: contacto = 3, búsqueda o visita = 1
+  searches: number;
+  views: number;
+  contacts: number;
+  availableProducts: number;
+  openNeeds: number;
+}
+
+export interface TrendingProduct {
+  productId: number;
+  title: string;
+  businessName: string;
+  category: Category;
+  views: number;
+  contacts: number;
+}
+
+export interface UnmetTerm {
+  term: string;
+  fails: number;
+}
+
+export interface TrendsResponse {
+  days: number;
+  totals: TrendsTotals;
+  daily: PlatformDailyActivity[];
+  categories: CategoryTrend[];
+  topProducts: TrendingProduct[];
+  topTerms: TopTerm[];
+  unmetTerms: UnmetTerm[];
+  localities: LocalityDemand[];
+}

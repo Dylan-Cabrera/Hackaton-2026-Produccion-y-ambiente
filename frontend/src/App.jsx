@@ -7,6 +7,7 @@ import RegisterPage from "@/pages/RegisterPage";
 import LoginPage from "@/pages/LoginPage";
 import MyProductsPage from "@/pages/MyProductsPage";
 import MapPage from "@/pages/MapPage";
+import TrendsPage from "@/pages/TrendsPage";
 import NeedsPage from "@/pages/NeedsPage";
 import NeedCreatePage from "@/pages/NeedCreatePage";
 import NeedDetailPage from "@/pages/NeedDetailPage";
@@ -28,6 +29,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<CatalogPage />} />
           <Route path="/mapa" element={<MapPage />} />
+          <Route path="/tendencias" element={<TrendsPage />} />
           <Route path="/registro" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/mis-productos" element={<MyProductsPage />} />
