@@ -9,7 +9,9 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import ErrorState from "@/components/ErrorState";
 import KpiCard from "@/components/KpiCard";
+import Skeleton from "@/components/Skeleton";
 import { useAuth } from "@/context/AuthContext";
 import { getMyContactClicksSummary, getNeeds } from "@/lib/api";
 
@@ -21,6 +23,8 @@ export default function ProducerDemandPage() {
   const [summary, setSummary] = useState(null);
   const [openNeeds, setOpenNeeds] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [retryTick, setRetryTick] = useState(0);
 
   useEffect(() => {
     document.title = "Demanda de mi negocio · Mercado Km 0";
@@ -36,18 +40,46 @@ export default function ProducerDemandPage() {
 
   useEffect(() => {
     if (user?.role !== "PRODUCER") return;
+    setLoading(true);
+    setError(null);
     Promise.all([getMyContactClicksSummary(), getNeeds({ category: user.category })])
       .then(([s, needs]) => {
         setSummary(s);
         setOpenNeeds(needs);
       })
+      .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, [user]);
+  }, [user, retryTick]);
 
-  if (status !== "authenticated" || user?.role !== "PRODUCER" || loading || !summary) {
+  if (status !== "authenticated" || user?.role !== "PRODUCER") {
     return (
       <main className="mx-auto max-w-4xl px-4 py-12">
         <p className="text-muted-foreground">Cargando…</p>
+      </main>
+    );
+  }
+
+  if (loading) {
+    return (
+      <main className="mx-auto max-w-4xl space-y-4 px-4 py-8">
+        <Skeleton className="h-9 w-72" />
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
+        </div>
+        <Skeleton className="h-72" />
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="mx-auto max-w-4xl px-4 py-8">
+        <ErrorState
+          message={`No pudimos cargar tu demanda: ${error}`}
+          onRetry={() => setRetryTick((t) => t + 1)}
+        />
       </main>
     );
   }

@@ -1,15 +1,13 @@
-import { ImageOff, Zap } from "lucide-react";
+import { Zap } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
+import ImageWithFallback from "@/components/ImageWithFallback";
 import KmZeroBadge from "@/components/KmZeroBadge";
 import { formatPrice } from "@/lib/distance";
 
 // items: [{ product, producer, distanceKm }]
 export default function CatalogFeed({ items, onSelect }) {
   if (items.length === 0) {
-    return (
-      <p className="rounded-xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
-        No hay productos con estos filtros.
-      </p>
-    );
+    return <EmptyState message="No hay productos con estos filtros." />;
   }
 
   return (
@@ -24,18 +22,11 @@ export default function CatalogFeed({ items, onSelect }) {
             className="group overflow-hidden rounded-xl border border-border bg-card text-left transition-shadow hover:shadow-lg"
           >
             <div className="relative aspect-[4/3] bg-muted">
-              {product.imageUrl ? (
-                <img
-                  src={product.imageUrl}
-                  alt={product.title}
-                  className="size-full object-cover transition-transform group-hover:scale-105"
-                />
-              ) : (
-                // Placeholder visual: la imagen es opcional al publicar.
-                <div className="flex size-full items-center justify-center text-muted-foreground">
-                  <ImageOff className="size-8" />
-                </div>
-              )}
+              <ImageWithFallback
+                src={product.imageUrl}
+                alt={product.title}
+                className="size-full transition-transform group-hover:scale-105"
+              />
               {product.isOffer && (
                 <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-destructive px-2 py-1 text-xs font-semibold text-destructive-foreground">
                   <Zap className="size-3" />

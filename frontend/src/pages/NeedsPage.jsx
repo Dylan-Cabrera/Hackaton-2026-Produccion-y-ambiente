@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import EmptyState from "@/components/EmptyState";
+import ErrorState from "@/components/ErrorState";
 import NeedCard from "@/components/NeedCard";
+import Skeleton from "@/components/Skeleton";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useMeta } from "@/hooks/useMeta";
@@ -13,6 +16,8 @@ export default function NeedsPage() {
   const [needs, setNeeds] = useState([]);
   const [category, setCategory] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [retryTick, setRetryTick] = useState(0);
 
   useEffect(() => {
     document.title = "Necesidades · Mercado Km 0";
@@ -20,10 +25,12 @@ export default function NeedsPage() {
 
   useEffect(() => {
     setLoading(true);
+    setError(null);
     getNeeds(category === "all" ? undefined : { category })
       .then(setNeeds)
+      .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, [category]);
+  }, [category, retryTick]);
 
   function handlePublish() {
     if (status === "anonymous") {
@@ -68,11 +75,18 @@ export default function NeedsPage() {
       </div>
 
       {loading ? (
-        <p className="text-muted-foreground">Cargando…</p>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
+      ) : error ? (
+        <ErrorState
+          message={`No pudimos cargar las necesidades: ${error}`}
+          onRetry={() => setRetryTick((t) => t + 1)}
+        />
       ) : needs.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
-          No hay necesidades abiertas en esta categoría todavía.
-        </p>
+        <EmptyState message="No hay necesidades abiertas en esta categoría todavía." />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {needs.map((need) => (

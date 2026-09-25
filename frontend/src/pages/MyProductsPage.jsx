@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CatalogFeed from "@/components/CatalogFeed";
+import ErrorState from "@/components/ErrorState";
+import { ProductCardSkeletonGrid } from "@/components/ProductCardSkeleton";
 import ProducerProfileCard from "@/components/ProducerProfileCard";
 import ProducerProfileEditForm from "@/components/ProducerProfileEditForm";
 import ProductCreateModal from "@/components/ProductCreateModal";
@@ -15,6 +17,9 @@ export default function MyProductsPage() {
   const [products, setProducts] = useState([]);
   const [selected, setSelected] = useState(null);
   const [editing, setEditing] = useState(false);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [error, setError] = useState(null);
+  const [retryTick, setRetryTick] = useState(0);
 
   useEffect(() => {
     document.title = "Mis productos y excedentes · Mercado Km 0";
@@ -30,8 +35,14 @@ export default function MyProductsPage() {
   }, [status, user, navigate]);
 
   useEffect(() => {
-    if (user?.role === "PRODUCER") getMyProducts().then(setProducts);
-  }, [user]);
+    if (user?.role !== "PRODUCER") return;
+    setLoadingProducts(true);
+    setError(null);
+    getMyProducts()
+      .then(setProducts)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoadingProducts(false));
+  }, [user, retryTick]);
 
   if (status !== "authenticated" || user?.role !== "PRODUCER") {
     return (
@@ -77,7 +88,16 @@ export default function MyProductsPage() {
         </div>
       )}
 
-      <CatalogFeed items={items} onSelect={setSelected} />
+      {loadingProducts ? (
+        <ProductCardSkeletonGrid count={3} />
+      ) : error ? (
+        <ErrorState
+          message={`No pudimos cargar tus productos: ${error}`}
+          onRetry={() => setRetryTick((t) => t + 1)}
+        />
+      ) : (
+        <CatalogFeed items={items} onSelect={setSelected} />
+      )}
 
       <ProductDetailView item={selected} onClose={() => setSelected(null)} />
     </main>

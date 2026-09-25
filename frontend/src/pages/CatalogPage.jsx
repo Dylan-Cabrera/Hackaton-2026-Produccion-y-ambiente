@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import CatalogFeed from "@/components/CatalogFeed";
+import { ProductCardSkeletonGrid } from "@/components/ProductCardSkeleton";
+import ErrorState from "@/components/ErrorState";
 import FilterBar from "@/components/FilterBar";
 import ProductDetailView from "@/components/ProductDetailView";
 import { Button } from "@/components/ui/button";
@@ -18,6 +20,8 @@ export default function CatalogPage() {
   const [results, setResults] = useState([]);
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [retryTick, setRetryTick] = useState(0);
 
   useEffect(() => {
     document.title = "Mercado Km 0 · Productores de Formosa";
@@ -27,6 +31,7 @@ export default function CatalogPage() {
   // no hace falta traer todo y filtrar en el cliente como antes.
   useEffect(() => {
     setLoading(true);
+    setError(null);
     const params = {
       q: q.trim() || undefined,
       category: category === "all" ? undefined : category,
@@ -40,11 +45,12 @@ export default function CatalogPage() {
     const timeout = setTimeout(() => {
       searchProducts(params)
         .then(({ items }) => setResults(items))
+        .catch((err) => setError(err.message))
         .finally(() => setLoading(false));
     }, 300); // debounce simple para no disparar una consulta por cada tecla en "q"
 
     return () => clearTimeout(timeout);
-  }, [q, category, onlyOffers, location]);
+  }, [q, category, onlyOffers, location, retryTick]);
 
   const items = useMemo(
     () =>
@@ -91,7 +97,12 @@ export default function CatalogPage() {
       />
 
       {loading ? (
-        <p className="text-muted-foreground">Cargando…</p>
+        <ProductCardSkeletonGrid />
+      ) : error ? (
+        <ErrorState
+          message={`No pudimos cargar el catálogo: ${error}`}
+          onRetry={() => setRetryTick((t) => t + 1)}
+        />
       ) : (
         <CatalogFeed items={items} onSelect={setSelected} />
       )}

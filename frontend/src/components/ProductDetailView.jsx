@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { CreditCard, ImageOff, Truck, Zap } from "lucide-react";
+import { CreditCard, Truck, Zap } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import ImageWithFallback from "@/components/ImageWithFallback";
 import KmZeroBadge from "@/components/KmZeroBadge";
 import TrustBadge from "@/components/TrustBadge";
 import WhatsAppContactButton from "@/components/WhatsAppContactButton";
@@ -33,13 +34,7 @@ export default function ProductDetailView({ item, onClose }) {
             </DialogHeader>
 
             <div className="aspect-[4/3] overflow-hidden rounded-lg bg-muted">
-              {product.imageUrl ? (
-                <img src={product.imageUrl} alt={product.title} className="size-full object-cover" />
-              ) : (
-                <div className="flex size-full items-center justify-center text-muted-foreground">
-                  <ImageOff className="size-10" />
-                </div>
-              )}
+              <ImageWithFallback src={product.imageUrl} alt={product.title} className="size-full" />
             </div>
 
             <div className="space-y-4 text-sm">
