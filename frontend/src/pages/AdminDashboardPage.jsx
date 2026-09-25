@@ -65,12 +65,12 @@ export default function AdminDashboardPage() {
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-3">
-          <KpiCard label="Productores" value={summary.producers} />
-          <KpiCard label="Consumidores" value={summary.consumers} />
-          <KpiCard label="Instituciones" value={summary.institutions} hint="Comedores, escuelas, ONGs…" />
-          <KpiCard label="Productos activos" value={summary.activeProducts} />
-          <KpiCard label="Ofertas activas" value={summary.activeOffers} />
-          <KpiCard label="Necesidades abiertas" value={summary.openNeeds} />
+          <KpiCard label="Productores" value={summary.totals.producers} />
+          <KpiCard label="Consumidores" value={summary.totals.consumers} />
+          <KpiCard label="Instituciones" value={summary.totals.institutions} hint="Comedores, escuelas, ONGs…" />
+          <KpiCard label="Productos activos" value={summary.totals.activeProducts} />
+          <KpiCard label="Ofertas activas" value={summary.totals.activeOffers} />
+          <KpiCard label="Necesidades abiertas" value={summary.totals.openNeeds} />
         </div>
       )}
 
