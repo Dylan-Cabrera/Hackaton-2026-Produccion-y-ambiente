@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { CreditCard, Truck, Zap } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ImageWithFallback from "@/components/ImageWithFallback";
@@ -70,7 +71,9 @@ export default function ProductDetailView({ item, onClose }) {
               {producer && (
                 <div className="space-y-3 rounded-lg border border-border p-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold">{producer.businessName}</span>
+                    <Link to={`/productores/${producer.id}`} className="font-semibold underline">
+                      {producer.businessName}
+                    </Link>
                     <TrustBadge createdAt={producer.createdAt} />
                   </div>
                   <p className="flex items-start gap-2 text-muted-foreground">

@@ -34,7 +34,7 @@ export default function SiteNav() {
         </NavLink>
         {status === "authenticated" ? (
           <>
-            {user?.role === "PRODUCER" && (
+            {user?.role === "PRODUCER" ? (
               <>
                 <NavLink to="/mis-productos" className={linkClass}>
                   Mis productos
@@ -43,6 +43,10 @@ export default function SiteNav() {
                   Mi demanda
                 </NavLink>
               </>
+            ) : (
+              <NavLink to="/cuenta" className={linkClass}>
+                Mi cuenta
+              </NavLink>
             )}
             <span className="px-2 text-sm text-muted-foreground">
               {user?.businessName ?? user?.name}

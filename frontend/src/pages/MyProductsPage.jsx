@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ErrorState from "@/components/ErrorState";
 import { ProductCardSkeletonGrid } from "@/components/ProductCardSkeleton";
 import ProducerInventoryList from "@/components/ProducerInventoryList";
@@ -74,9 +74,14 @@ export default function MyProductsPage() {
       ) : (
         <div className="space-y-3">
           <ProducerProfileCard producer={user} />
-          <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-            Editar perfil
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+              Editar perfil
+            </Button>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to={`/productores/${user.id}`}>Ver mi perfil público</Link>
+            </Button>
+          </div>
         </div>
       )}
 
