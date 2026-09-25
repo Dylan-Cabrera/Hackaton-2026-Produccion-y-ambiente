@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import ProductImageField from "@/components/ProductImageField";
 import ToggleOfferSwitch from "@/components/ToggleOfferSwitch";
 import { useMeta } from "@/hooks/useMeta";
 import { createProduct } from "@/lib/api";
@@ -29,6 +30,7 @@ export default function ProductCreateModal({ defaultCategory, onCreated }) {
   const [price, setPrice] = useState("");
   const [stockUnit, setStockUnit] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [isOffer, setIsOffer] = useState(false);
   const [offerPrice, setOfferPrice] = useState("");
   const [error, setError] = useState("");
@@ -152,15 +154,11 @@ export default function ProductCreateModal({ defaultCategory, onCreated }) {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="imageUrl">Imagen (URL, opcional)</Label>
-            <Input
-              id="imageUrl"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="https://…"
-            />
-          </div>
+          <ProductImageField
+            value={imageUrl}
+            onChange={setImageUrl}
+            onUploadingChange={setUploadingImage}
+          />
 
           <ToggleOfferSwitch
             isOffer={isOffer}
@@ -175,8 +173,8 @@ export default function ProductCreateModal({ defaultCategory, onCreated }) {
             </p>
           )}
 
-          <Button type="submit" className="w-full" disabled={saving}>
-            {saving ? "Publicando…" : "Publicar"}
+          <Button type="submit" className="w-full" disabled={saving || uploadingImage}>
+            {saving ? "Publicando…" : uploadingImage ? "Esperando la imagen…" : "Publicar"}
           </Button>
         </form>
       </DialogContent>

@@ -4,14 +4,14 @@ import "@/App.css";
 
 export default function MapPage() {
   useEffect(() => {
-    document.title = "Mapa de oferta · Mercado Km 0";
+    document.title = "Mapa de oferta y demanda · Mercado Km 0";
   }, []);
 
   return (
     <div className="page">
       <header className="page-header">
-        <h1>Mapa de oferta</h1>
-        <p>Ubicación de productores locales por rubro</p>
+        <h1>Mapa de oferta y demanda</h1>
+        <p>Dónde se buscan los productos y dónde están los productores locales, por rubro</p>
       </header>
 
       <main>

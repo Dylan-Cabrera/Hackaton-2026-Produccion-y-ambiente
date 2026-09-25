@@ -28,7 +28,7 @@ export default function CatalogFeed({ items, onSelect }) {
                 className="size-full transition-transform group-hover:scale-105"
               />
               {product.isOffer && (
-                <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-destructive px-2 py-1 text-xs font-semibold text-destructive-foreground">
+                <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-offer px-2 py-1 text-xs font-semibold text-offer-foreground shadow-sm">
                   <Zap className="size-3" />
                   Oferta Relámpago
                 </span>
