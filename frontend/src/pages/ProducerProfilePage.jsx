@@ -31,7 +31,7 @@ export default function ProducerProfilePage() {
   }, [id, retryTick]);
 
   useEffect(() => {
-    if (producer) document.title = `${producer.businessName} · Mercado Km 0`;
+    if (producer) document.title = `${producer.businessName} · Formosa Unida`;
   }, [producer]);
 
   if (loading) {

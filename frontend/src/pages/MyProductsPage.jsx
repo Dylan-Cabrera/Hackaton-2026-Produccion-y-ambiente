@@ -20,7 +20,7 @@ export default function MyProductsPage() {
   const [retryTick, setRetryTick] = useState(0);
 
   useEffect(() => {
-    document.title = "Mis productos y excedentes · Mercado Km 0";
+    document.title = "Mis productos y excedentes · Formosa Unida";
   }, []);
 
   // Sin sesión, o con sesión pero sin ser productor, no hay nada que mostrar acá.

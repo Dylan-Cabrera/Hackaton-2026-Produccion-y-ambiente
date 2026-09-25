@@ -26,7 +26,7 @@ export default function CatalogPage() {
   const lastTrackedSearch = useRef("");
 
   useEffect(() => {
-    document.title = "Mercado Km 0 · Productores de Formosa";
+    document.title = "Formosa Unida · Productores de Formosa";
   }, []);
 
   // El backend ya filtra, ordena por cercanía (si hay lat/lng) y pagina:

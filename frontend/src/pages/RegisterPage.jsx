@@ -12,7 +12,7 @@ export default function RegisterPage() {
   const [created, setCreated] = useState(null);
 
   useEffect(() => {
-    document.title = "Crear cuenta · Mercado Km 0";
+    document.title = "Crear cuenta · Formosa Unida";
   }, []);
 
   if (created) {

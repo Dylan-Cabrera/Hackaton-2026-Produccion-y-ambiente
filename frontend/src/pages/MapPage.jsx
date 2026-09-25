@@ -4,7 +4,7 @@ import "@/App.css";
 
 export default function MapPage() {
   useEffect(() => {
-    document.title = "Mapa de oferta y demanda · Mercado Km 0";
+    document.title = "Mapa de oferta y demanda · Formosa Unida";
   }, []);
 
   return (
