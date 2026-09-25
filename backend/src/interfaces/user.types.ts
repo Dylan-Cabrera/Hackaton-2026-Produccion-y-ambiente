@@ -95,6 +95,7 @@ export interface PublicUserProfile {
   name: string;
   locality: string | null;
   coordinates: GeoJSONPoint | null;
+  createdAt: Date;
   // Solo si la cuenta consultada es la propia
   email?: string;
   phone?: string | null;

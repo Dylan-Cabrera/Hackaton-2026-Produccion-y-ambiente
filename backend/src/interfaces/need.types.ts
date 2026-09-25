@@ -64,6 +64,8 @@ export interface NeedRecord {
 
 // Datos del autor embebidos en un listado/detalle público
 export interface NeedAuthorSummary {
+  // Público a propósito: el cliente lo necesita para saber si el que consulta es el autor
+  id: number;
   displayName: string;
   accountType: AccountType | null;
   institutionType: InstitutionType | null;
@@ -211,6 +213,7 @@ export interface NeedMatchesResponse {
 export interface ForProducerCandidate extends NeedRecord {
   distanceKm: number;
   author: {
+    id: number;
     name: string;
     phone: string | null;
     accountType: AccountType | null;

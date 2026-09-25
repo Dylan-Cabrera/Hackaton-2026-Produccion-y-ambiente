@@ -274,6 +274,7 @@ export class SequelizeNeedRepository implements INeedRepository {
       createdAt: row.createdAt,
       distanceKm: Number(row.distanceKm),
       author: {
+        id: row.userId,
         name: row.authorName,
         phone: row.authorPhone,
         accountType: row.authorAccountType,

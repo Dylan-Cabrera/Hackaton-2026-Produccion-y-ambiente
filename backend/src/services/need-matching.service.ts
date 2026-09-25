@@ -113,6 +113,7 @@ export class NeedMatchingService implements INeedMatchingService {
         createdAt: candidate.createdAt,
         distanceKm: candidate.distanceKm,
         author: {
+          id: candidate.author.id,
           displayName: candidate.author.organizationName ?? candidate.author.name,
           accountType: candidate.author.accountType,
           institutionType: candidate.author.institutionType,

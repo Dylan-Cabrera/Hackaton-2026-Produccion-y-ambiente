@@ -44,7 +44,7 @@ export const needRepository: INeedRepository = new SequelizeNeedRepository();
 export const passwordHasher: IPasswordHasher = new BcryptPasswordHasher();
 export const tokenService: ITokenService = new JwtTokenService();
 
-export const producerService: IProducerService = new ProducerService(producerRepository);
+export const producerService: IProducerService = new ProducerService(producerRepository, userRepository);
 export const productService: IProductService = new ProductService(productRepository, producerRepository);
 export const recommendationService: IRecommendationService = new RecommendationService(
   productRepository,

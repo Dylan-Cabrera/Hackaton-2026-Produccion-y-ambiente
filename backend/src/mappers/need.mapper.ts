@@ -115,6 +115,7 @@ export class NeedMapper {
     const canSeePhone = requester.role === 'PRODUCER' || requester.userId === record.author.id;
 
     return {
+      id: record.author.id,
       displayName: record.author.organizationName ?? record.author.name,
       accountType: record.author.accountType,
       institutionType: record.author.institutionType,

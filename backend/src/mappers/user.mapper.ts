@@ -79,7 +79,8 @@ export class UserMapper {
       role: record.role,
       name: record.name,
       locality: record.locality,
-      coordinates: record.coordinates
+      coordinates: record.coordinates,
+      createdAt: record.createdAt
     };
 
     if (own) {
