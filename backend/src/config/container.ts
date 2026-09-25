@@ -8,6 +8,7 @@ import { JwtTokenService } from '../security/jwt-token.service.js';
 import { ProducerService } from '../services/producer.service.js';
 import { AuthService } from '../services/auth.service.js';
 import { ProductService } from '../services/product.service.js';
+import { RecommendationService } from '../services/recommendation.service.js';
 import { IUserRepository } from '../interfaces/user-repository.interface.js';
 import { IProducerRepository } from '../interfaces/producer-repository.interface.js';
 import { IProductRepository } from '../interfaces/product-repository.interface.js';
@@ -16,6 +17,7 @@ import { ITokenService } from '../interfaces/token-service.interface.js';
 import { IProducerService } from '../interfaces/producer-service.interface.js';
 import { IAuthService } from '../interfaces/auth-service.interface.js';
 import { IProductService } from '../interfaces/product-service.interface.js';
+import { IRecommendationService } from '../interfaces/recommendation-service.interface.js';
 
 export const userRepository: IUserRepository = new SequelizeUserRepository();
 export const producerRepository: IProducerRepository = new SequelizeProducerRepository();
@@ -25,5 +27,9 @@ export const tokenService: ITokenService = new JwtTokenService();
 
 export const producerService: IProducerService = new ProducerService(producerRepository);
 export const productService: IProductService = new ProductService(productRepository, producerRepository);
+export const recommendationService: IRecommendationService = new RecommendationService(
+  productRepository,
+  producerRepository
+);
 
 export const authService: IAuthService = new AuthService(userRepository, passwordHasher, tokenService);

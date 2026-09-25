@@ -5,6 +5,7 @@ import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
 import producerRoutes from './routes/producer.routes.js';
 import productRoutes from './routes/product.routes.js';
+import recommendationRoutes from './routes/recommendation.routes.js';
 import metaRoutes from './routes/meta.routes.js';
 import { errorHandler } from './middlewares/error-handler.js';
 
@@ -44,6 +45,9 @@ export const createApp = () => {
 
   // Rutas de productos
   app.use('/api/products', productRoutes);
+
+  // Recomendaciones
+  app.use('/api/recommendations', recommendationRoutes);
 
   // Catálogos estáticos para el frontend
   app.use('/api/meta', metaRoutes);

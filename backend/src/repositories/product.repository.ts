@@ -69,8 +69,14 @@ export class SequelizeProductRepository implements IProductRepository {
     if (criteria.category) {
       where.push({ category: criteria.category });
     }
+    if (criteria.categories && criteria.categories.length > 0) {
+      where.push({ category: { [Op.in]: criteria.categories } });
+    }
     if (criteria.isOffer !== undefined) {
       where.push({ isOffer: criteria.isOffer });
+    }
+    if (criteria.excludeProducerId !== undefined) {
+      where.push({ producerId: { [Op.ne]: criteria.excludeProducerId } });
     }
     if (criteria.q) {
       // unaccent() ya está habilitada en connectDatabase() (Fase 0.8)

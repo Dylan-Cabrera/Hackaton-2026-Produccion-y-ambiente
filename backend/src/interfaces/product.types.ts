@@ -108,12 +108,16 @@ export interface SearchProductsInput {
 export interface ProductSearchCriteria {
   q?: string;
   category?: Category;
+  // Filtro "category IN (...)" para matching por rubro (HU-05/HU-11); no lo usa la búsqueda pública
+  categories?: Category[];
   isOffer?: boolean;
   limit: number;
   offset: number;
   lat?: number;
   lng?: number;
   maxDistance?: number;
+  // Excluye los productos de un productor (para no recomendarse a uno mismo, HU-05)
+  excludeProducerId?: number;
 }
 
 export interface ProductSearchResult {
