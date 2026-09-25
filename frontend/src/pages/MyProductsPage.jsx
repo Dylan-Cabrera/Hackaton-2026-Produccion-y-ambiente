@@ -7,7 +7,7 @@ import ProductCreateModal from "@/components/ProductCreateModal";
 import ProductDetailView from "@/components/ProductDetailView";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
-import { getProducerProducts } from "@/lib/api";
+import { getMyProducts } from "@/lib/api";
 
 export default function MyProductsPage() {
   const { user, status } = useAuth();
@@ -20,18 +20,20 @@ export default function MyProductsPage() {
     document.title = "Mis productos y excedentes · Mercado Km 0";
   }, []);
 
-  // Sin sesión no hay nada que mostrar: se redirige a login (HU-01: "Redirige a login").
+  // Sin sesión, o con sesión pero sin ser productor, no hay nada que mostrar acá.
   useEffect(() => {
     if (status === "anonymous") {
       navigate("/login");
+    } else if (status === "authenticated" && user?.role !== "PRODUCER") {
+      navigate("/");
     }
-  }, [status, navigate]);
+  }, [status, user, navigate]);
 
   useEffect(() => {
-    if (user) getProducerProducts(user.id).then(setProducts);
+    if (user?.role === "PRODUCER") getMyProducts().then(setProducts);
   }, [user]);
 
-  if (status === "loading" || status === "anonymous") {
+  if (status !== "authenticated" || user?.role !== "PRODUCER") {
     return (
       <main className="mx-auto max-w-5xl px-4 py-8">
         <p className="text-muted-foreground">Cargando…</p>

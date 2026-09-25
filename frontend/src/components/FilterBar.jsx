@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { CATEGORIES } from "@/lib/constants";
 
-// Filtrado en cliente: instantáneo, sin recargar la página.
-export default function FilterBar({ category, onlyOffers, onCategoryChange, onOnlyOffersChange }) {
+// Filtrado en el backend (GET /api/products?category=&isOffer=). Las categorías
+// vienen de /api/meta, no están hardcodeadas acá.
+export default function FilterBar({ category, onlyOffers, categories, onCategoryChange, onOnlyOffersChange }) {
   return (
     <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex flex-wrap gap-2">
@@ -15,7 +15,7 @@ export default function FilterBar({ category, onlyOffers, onCategoryChange, onOn
         >
           Todo
         </Button>
-        {CATEGORIES.map((c) => (
+        {categories.map((c) => (
           <Button
             key={c}
             variant={category === c ? "default" : "outline"}

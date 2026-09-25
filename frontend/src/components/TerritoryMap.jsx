@@ -1,23 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet.heat";
 import "./TerritoryMap.css";
-import { getProducers } from "@/lib/api";
+import { useMeta } from "@/hooks/useMeta";
+import { searchProducts } from "@/lib/api";
 
-const DEMAND_URL = "http://localhost:3000/api/products/demand-heatmap";
-
-// Colores por categoría, para diferenciar los pines en el mapa
-const CATEGORY_COLORS = {
-  "Frutihortícola": "#639922",
-  "Conservas/Dulces": "#D85A30",
-  "Apicultura": "#BA7517",
-  "Artesanías/Textil": "#D4537E",
-  "Otros": "#5F5E5A",
-};
-
-const CATEGORIES = ["Todos", ...Object.keys(CATEGORY_COLORS)];
+// Genera un color estable por nombre de categoría (ya no son 5 fijas, son las
+// que devuelva /api/meta) usando el propio texto como semilla del matiz.
+function colorForCategory(name) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  const hue = Math.abs(hash) % 360;
+  return `hsl(${hue}, 60%, 42%)`;
+}
 
 // Convierte [lng, lat] (formato GeoJSON del backend) a [lat, lng] (formato que espera Leaflet)
 function toLatLng(coordinates) {
@@ -25,7 +22,6 @@ function toLatLng(coordinates) {
   return [lat, lng];
 }
 
-// Crea un ícono de color distinto según la categoría del productor
 function createIcon(color) {
   return L.divIcon({
     className: "",
@@ -35,65 +31,60 @@ function createIcon(color) {
   });
 }
 
-// Heatmap genérico: recibe los puntos y los colores del degradado, y se encarga
-// de dibujar la capa y limpiarla cuando cambian los datos. Lo reutilizamos para
-// oferta y demanda, cambiando solo qué puntos y qué colores le pasamos.
-function HeatmapLayer({ points, gradient }) {
+function HeatmapLayer({ points }) {
   const map = useMap();
 
   useEffect(() => {
     if (!points.length) return;
 
-    const heatLayer = L.heatLayer(points, {
-      radius: 60,
-      blur: 40,
-      maxZoom: 17,
-      gradient,
-    }).addTo(map);
+    const heatLayer = L.heatLayer(points, { radius: 60, blur: 40, maxZoom: 17 }).addTo(map);
 
     return () => {
       map.removeLayer(heatLayer);
     };
-  }, [map, points, gradient]);
+  }, [map, points]);
 
   return null;
 }
 
 export default function TerritoryMap() {
+  const { meta } = useMeta();
   const [producers, setProducers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("Todos");
 
-  // "oferta" o "demanda": qué heatmap se está mostrando en el mapa
-  const [mode, setMode] = useState("oferta");
-  const [demandQuery, setDemandQuery] = useState("");
-  const [demandPoints, setDemandPoints] = useState([]);
-  const [demandSearched, setDemandSearched] = useState(false);
+  const categories = meta?.categories ?? [];
+  const colors = useMemo(() => {
+    const map = {};
+    for (const c of categories) map[c] = colorForCategory(c);
+    return map;
+  }, [categories]);
 
+  // No hay endpoint para listar productores directamente: se derivan de los
+  // productos publicados (con hasta 100 resultados alcanza para la demo).
+  // Cada productor queda asociado a la categoría de su primer producto
+  // encontrado, que en la práctica coincide con su propio rubro.
   useEffect(() => {
-    getProducers()
-      .then((data) => {
-        setProducers(data);
+    setLoading(true);
+    searchProducts({
+      category: selectedCategory === "Todos" ? undefined : selectedCategory,
+      limit: 100,
+    })
+      .then(({ items }) => {
+        const byProducer = new Map();
+        for (const item of items) {
+          if (!item.producer?.coordinates || byProducer.has(item.producer.id)) continue;
+          byProducer.set(item.producer.id, { ...item.producer, category: item.category });
+        }
+        setProducers([...byProducer.values()]);
         setLoading(false);
       })
       .catch((err) => {
         setError(err.message);
         setLoading(false);
       });
-  }, []);
-
-  function handleDemandSearch(e) {
-    e.preventDefault();
-    if (!demandQuery.trim()) return;
-
-    fetch(`${DEMAND_URL}?q=${encodeURIComponent(demandQuery)}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setDemandPoints(data.points);
-        setDemandSearched(true);
-      });
-  }
+  }, [selectedCategory]);
 
   if (loading) {
     return (
@@ -111,65 +102,30 @@ export default function TerritoryMap() {
     );
   }
 
-  const filteredProducers =
-    selectedCategory === "Todos"
-      ? producers
-      : producers.filter((p) => p.category === selectedCategory);
-
-  const offerPoints = filteredProducers.map((p) => toLatLng(p.coordinates));
+  const offerPoints = producers.map((p) => toLatLng(p.coordinates));
 
   return (
     <div className="map-card">
-      <div className="mode-toggle">
+      <div className="map-legend">
         <button
           type="button"
-          className={`mode-button ${mode === "oferta" ? "active" : ""}`}
-          onClick={() => setMode("oferta")}
+          className={`legend-item legend-button ${selectedCategory === "Todos" ? "active" : ""}`}
+          onClick={() => setSelectedCategory("Todos")}
         >
-          Oferta
+          Todos
         </button>
-        <button
-          type="button"
-          className={`mode-button ${mode === "demanda" ? "active" : ""}`}
-          onClick={() => setMode("demanda")}
-        >
-          Demanda
-        </button>
+        {categories.map((category) => (
+          <button
+            key={category}
+            type="button"
+            className={`legend-item legend-button ${selectedCategory === category ? "active" : ""}`}
+            onClick={() => setSelectedCategory(category)}
+          >
+            <span className="legend-dot" style={{ background: colors[category] }} />
+            {category}
+          </button>
+        ))}
       </div>
-
-      {mode === "oferta" && (
-        <div className="map-legend">
-          {CATEGORIES.map((category) => (
-            <button
-              key={category}
-              type="button"
-              className={`legend-item legend-button ${selectedCategory === category ? "active" : ""}`}
-              onClick={() => setSelectedCategory(category)}
-            >
-              {category !== "Todos" && (
-                <span className="legend-dot" style={{ background: CATEGORY_COLORS[category] }} />
-              )}
-              {category}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {mode === "demanda" && (
-        <form onSubmit={handleDemandSearch} className="demand-form">
-          <input
-            type="text"
-            value={demandQuery}
-            onChange={(e) => setDemandQuery(e.target.value)}
-            placeholder="Ej: pescado, miel, queso..."
-          />
-          <button type="submit">Ver demanda</button>
-        </form>
-      )}
-
-      {mode === "demanda" && demandSearched && demandPoints.length === 0 && (
-        <p className="demand-empty">No hay búsquedas registradas para "{demandQuery}" todavía.</p>
-      )}
 
       <MapContainer center={[-26.1849, -58.1731]} zoom={14}>
         <TileLayer
@@ -177,35 +133,25 @@ export default function TerritoryMap() {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
 
-        {mode === "oferta" && (
-          <>
-            <HeatmapLayer points={offerPoints} />
-            {filteredProducers.map((producer) => (
-              <Marker
-                key={producer.id}
-                position={toLatLng(producer.coordinates)}
-                icon={createIcon(CATEGORY_COLORS[producer.category] || "#5F5E5A")}
-              >
-                <Popup className="producer-popup">
-                  <div
-                    className="popup-content"
-                    style={{ "--popup-color": CATEGORY_COLORS[producer.category] || "#5F5E5A" }}
-                  >
-                    <strong>{producer.businessName}</strong>
-                    <span>{producer.category}</span>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-          </>
-        )}
+        <HeatmapLayer points={offerPoints} />
 
-        {mode === "demanda" && demandPoints.length > 0 && (
-          <HeatmapLayer
-            points={demandPoints}
-            gradient={{ 0.4: "yellow", 0.7: "orange", 1: "red" }}
-          />
-        )}
+        {producers.map((producer) => (
+          <Marker
+            key={producer.id}
+            position={toLatLng(producer.coordinates)}
+            icon={createIcon(colors[producer.category] || "#5F5E5A")}
+          >
+            <Popup className="producer-popup">
+              <div
+                className="popup-content"
+                style={{ "--popup-color": colors[producer.category] || "#5F5E5A" }}
+              >
+                <strong>{producer.businessName}</strong>
+                <span>{producer.category}</span>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
       </MapContainer>
     </div>
   );

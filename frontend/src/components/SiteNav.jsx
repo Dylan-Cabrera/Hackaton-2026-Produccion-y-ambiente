@@ -29,18 +29,16 @@ export default function SiteNav() {
         <NavLink to="/mapa" className={linkClass}>
           Mapa
         </NavLink>
-        <NavLink to="/necesidades" className={linkClass}>
-          Necesidades
-        </NavLink>
         {status === "authenticated" ? (
           <>
-            <NavLink to="/mis-productos" className={linkClass}>
-              Mis productos
-            </NavLink>
-            <NavLink to="/mi-demanda" className={linkClass}>
-              Mi demanda
-            </NavLink>
-            <span className="px-2 text-sm text-muted-foreground">{user?.businessName}</span>
+            {user?.role === "PRODUCER" && (
+              <NavLink to="/mis-productos" className={linkClass}>
+                Mis productos
+              </NavLink>
+            )}
+            <span className="px-2 text-sm text-muted-foreground">
+              {user?.businessName ?? user?.name}
+            </span>
             <Button variant="outline" size="sm" onClick={handleLogout}>
               Salir
             </Button>
@@ -48,7 +46,7 @@ export default function SiteNav() {
         ) : (
           <>
             <NavLink to="/registro" className={linkClass}>
-              Soy productor
+              Crear cuenta
             </NavLink>
             <NavLink to="/login" className={linkClass}>
               Ingresar

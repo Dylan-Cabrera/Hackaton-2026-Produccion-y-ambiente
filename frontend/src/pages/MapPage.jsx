@@ -1,23 +1,21 @@
 import { useEffect } from "react";
 import TerritoryMap from "@/components/TerritoryMap";
-import UnmetDemandPanel from "@/components/UnmetDemandPanel";
 import "@/App.css";
 
 export default function MapPage() {
   useEffect(() => {
-    document.title = "Mapa de oferta y vacíos productivos";
+    document.title = "Mapa de oferta · Mercado Km 0";
   }, []);
 
   return (
     <div className="page">
       <header className="page-header">
-        <h1>Mapa de oferta y vacíos productivos</h1>
-        <p>Ubicación de productores locales y zonas con poca cobertura</p>
+        <h1>Mapa de oferta</h1>
+        <p>Ubicación de productores locales por rubro</p>
       </header>
 
       <main>
         <TerritoryMap />
-        <UnmetDemandPanel />
       </main>
     </div>
   );

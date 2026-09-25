@@ -18,8 +18,8 @@ export default function LoginForm() {
     setError("");
     setSaving(true);
     try {
-      await login(email.trim(), password);
-      navigate("/mis-productos");
+      const account = await login(email.trim(), password);
+      navigate(account.role === "PRODUCER" ? "/mis-productos" : "/");
     } catch (err) {
       setError(err.message);
     } finally {

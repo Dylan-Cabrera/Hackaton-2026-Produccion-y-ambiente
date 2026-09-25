@@ -50,11 +50,11 @@ export default function CatalogFeed({ items, onSelect }) {
               </p>
               <p className="flex items-baseline gap-2">
                 <span className="text-lg font-bold text-primary">
-                  {formatPrice(product.offerPrice ?? product.regularPrice)}
+                  {formatPrice(product.offerPrice ?? product.price)}
                 </span>
                 {product.isOffer && product.offerPrice && (
                   <span className="text-sm text-muted-foreground line-through">
-                    {formatPrice(product.regularPrice)}
+                    {formatPrice(product.price)}
                   </span>
                 )}
               </p>

@@ -1,9 +1,11 @@
-// Backend real (Express + Sequelize + PostGIS) corriendo en local, con auth por
-// cookie HTTP-Only.
+// Backend real (Express + Sequelize + PostGIS) de mi compañero, con roles
+// CONSUMER/PRODUCER/ADMIN y auth por cookie HTTP-Only.
 export const API_BASE = "http://localhost:3000";
 
 // Envuelve fetch: manda cookies de sesión, tira un Error con status/fieldErrors
 // normalizados (igual forma en toda la app, así los formularios no repiten lógica).
+// Devuelve el body completo ({message, data, pagination?}) porque algunos
+// endpoints (búsqueda de productos) traen metadata además de "data".
 async function request(path, options = {}) {
   let res;
   try {
@@ -28,12 +30,19 @@ async function request(path, options = {}) {
     throw error;
   }
 
-  return body?.data;
+  return body;
 }
 
-// El backend anida la ubicación en location: { address, coordinates }. El resto
-// del frontend ya espera address/coordinates sueltos (mismo shape que el mock
-// viejo), así que se aplana acá, en un solo lugar.
+// El perfil de productor viaja anidado (producerProfile) en la cuenta de
+// usuario. Se aplana para que el resto de la app trabaje con un solo objeto,
+// igual que antes.
+function flattenUser(raw) {
+  if (!raw) return raw;
+  const { producerProfile, ...rest } = raw;
+  return { ...rest, ...(producerProfile ?? {}) };
+}
+
+// El perfil público de productor trae la ubicación anidada en location.
 function flattenProducer(raw) {
   if (!raw) return raw;
   const { location, ...rest } = raw;
@@ -44,128 +53,119 @@ function flattenProducer(raw) {
   };
 }
 
-// --- Autenticación ---
+// --- Metadatos (categorías, unidades, localidades, tipos de institución) ---
 
-export async function registerProducer(data) {
-  const result = await request("/api/producers", {
+export async function getMeta() {
+  const res = await request("/api/meta");
+  return res.data;
+}
+
+// --- Autenticación / cuenta ---
+
+export async function registerAccount(data) {
+  const res = await request("/api/auth/register", {
     method: "POST",
     body: JSON.stringify(data),
   });
-  return { ...result, producer: flattenProducer(result.producer) };
+  return { ...res.data, user: flattenUser(res.data.user) };
 }
 
-export async function loginProducer(email, password) {
-  const result = await request("/api/auth/login", {
+export async function loginAccount(email, password) {
+  const res = await request("/api/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
-  return { ...result, producer: flattenProducer(result.producer) };
+  return { ...res.data, user: flattenUser(res.data.user) };
 }
 
-export async function logoutProducer() {
+export async function logoutAccount() {
   return request("/api/auth/logout", { method: "POST" });
 }
 
 // Un 401 acá no es un error real: significa "no hay sesión" (visitante).
 export async function getProfile() {
   try {
-    const producer = await request("/api/auth/profile");
-    return flattenProducer(producer);
+    const res = await request("/api/auth/profile");
+    return flattenUser(res.data);
   } catch (err) {
     if (err.status === 401) return null;
     throw err;
   }
 }
 
-// --- Productores ---
-
-export async function getProducers() {
-  const producers = await request("/api/producers");
-  return producers.map(flattenProducer);
-}
-
-export async function getProducer(id) {
-  const producer = await request(`/api/producers/${id}`);
-  return flattenProducer(producer);
-}
-
-export async function updateProducer(id, data) {
-  const producer = await request(`/api/producers/${id}`, {
-    method: "PATCH",
+// Campos de cuenta comunes a cualquier rol (nombre, teléfono, localidad...)
+export async function updateAccount(data) {
+  const res = await request("/api/users/me", {
+    method: "PUT",
     body: JSON.stringify(data),
   });
-  return flattenProducer(producer);
+  return flattenUser(res.data);
 }
 
-export async function deleteProducer(id) {
-  return request(`/api/producers/${id}`, { method: "DELETE" });
+export async function deleteAccount() {
+  return request("/api/users/me", { method: "DELETE" });
+}
+
+// Campos propios del emprendimiento (solo rol PRODUCER)
+export async function updateProducerProfile(data) {
+  const res = await request("/api/producers/profile", {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+  return flattenUser(res.data);
+}
+
+// --- Productores (perfil público) ---
+
+export async function getProducer(id) {
+  const res = await request(`/api/producers/${id}`);
+  return flattenProducer(res.data);
+}
+
+export async function getProducerProducts(id) {
+  const res = await request(`/api/producers/${id}/products`);
+  return res.data;
 }
 
 // --- Productos ---
 
-export async function getProducts(params) {
+// Búsqueda pública con paginación y, opcionalmente, orden por cercanía
+// (lat/lng/maxDistance, HU-04). Devuelve { data, pagination }, no solo el array,
+// porque el catálogo necesita el total para el scroll/paginado.
+export async function searchProducts(params = {}) {
   const qs = new URLSearchParams();
-  if (params?.category) qs.set("category", params.category);
-  if (params?.isOffer) qs.set("isOffer", "true");
+  if (params.q) qs.set("q", params.q);
+  if (params.category) qs.set("category", params.category);
+  if (params.isOffer) qs.set("isOffer", "true");
+  if (params.limit) qs.set("limit", params.limit);
+  if (params.offset) qs.set("offset", params.offset);
+  if (params.lat != null && params.lng != null) {
+    qs.set("lat", params.lat);
+    qs.set("lng", params.lng);
+    if (params.maxDistance) qs.set("maxDistance", params.maxDistance);
+  }
   const suffix = qs.toString() ? `?${qs}` : "";
-  return request(`/api/products${suffix}`);
-}
-
-export async function getProducerProducts(producerId) {
-  return request(`/api/producers/${producerId}/products`);
+  const res = await request(`/api/products${suffix}`);
+  return { items: res.data, pagination: res.pagination };
 }
 
 export async function createProduct(data) {
-  return request("/api/products", {
+  const res = await request("/api/products", {
     method: "POST",
     body: JSON.stringify(data),
   });
+  return res.data;
+}
+
+export async function getMyProducts() {
+  const res = await request("/api/products/mine");
+  return res.data;
 }
 
 export async function updateProduct(id, data) {
-  return request(`/api/products/${id}`, {
+  const res = await request(`/api/products/${id}`, {
     method: "PATCH",
     body: JSON.stringify(data),
   });
-}
-
-// --- Necesidades ---
-
-export async function getNeeds(params) {
-  const qs = new URLSearchParams();
-  if (params?.category) qs.set("category", params.category);
-  const suffix = qs.toString() ? `?${qs}` : "";
-  return request(`/api/needs${suffix}`);
-}
-
-export async function getNeed(id) {
-  return request(`/api/needs/${id}`);
-}
-
-export async function getMyNeeds() {
-  return request("/api/needs/mine");
-}
-
-export async function createNeed(data) {
-  return request("/api/needs", { method: "POST", body: JSON.stringify(data) });
-}
-
-export async function updateNeedStatus(id, status) {
-  return request(`/api/needs/${id}`, { method: "PATCH", body: JSON.stringify({ status }) });
-}
-
-// Resumen de clics de contacto del productor logueado (dashboard de demanda).
-export async function getMyContactClicksSummary() {
-  return request("/api/interactions/contact-click/mine");
-}
-
-// Métrica de contacto: se dispara en paralelo, no se espera la respuesta.
-// Se traga cualquier error a propósito: un fallo acá nunca debe frenar el
-// contacto real por WhatsApp.
-export function trackContactClick(payload) {
-  fetch(`${API_BASE}/api/interactions/contact-click`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...payload, at: new Date().toISOString() }),
-  }).catch(() => {});
+  return res.data;
 }

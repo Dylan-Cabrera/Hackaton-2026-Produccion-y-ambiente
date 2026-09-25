@@ -3,44 +3,57 @@ import CatalogFeed from "@/components/CatalogFeed";
 import FilterBar from "@/components/FilterBar";
 import ProductDetailView from "@/components/ProductDetailView";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useMeta } from "@/hooks/useMeta";
 import { useUserLocation } from "@/hooks/useUserLocation";
-import { getProducers, getProducts } from "@/lib/api";
-import { geoToLatLng, haversineKm } from "@/lib/distance";
+import { searchProducts } from "@/lib/api";
 
 export default function CatalogPage() {
-  const [products, setProducts] = useState([]);
-  const [producers, setProducers] = useState([]);
+  const { meta } = useMeta();
+  const { location, status, request } = useUserLocation();
+
+  const [q, setQ] = useState("");
   const [category, setCategory] = useState("all");
   const [onlyOffers, setOnlyOffers] = useState(false);
+  const [results, setResults] = useState([]);
   const [selected, setSelected] = useState(null);
-  const { location, status, request } = useUserLocation();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     document.title = "Mercado Km 0 · Productores de Formosa";
   }, []);
 
-  // Se trae todo una vez y se filtra en cliente: el filtro debe ser instantáneo.
+  // El backend ya filtra, ordena por cercanía (si hay lat/lng) y pagina:
+  // no hace falta traer todo y filtrar en el cliente como antes.
   useEffect(() => {
-    getProducts().then(setProducts);
-    getProducers().then(setProducers);
-  }, []);
-
-  const items = useMemo(() => {
-    const list = products
-      .filter((p) => (category === "all" || p.category === category) && (!onlyOffers || p.isOffer))
-      .map((product) => {
-        const producer = producers.find((pr) => pr.id === product.producerId);
-        const coords = geoToLatLng(producer?.coordinates);
-        const distanceKm = location && coords ? haversineKm(location, coords) : null;
-        return { product, producer, distanceKm };
-      });
-
-    // Orden por cercanía solo si hay ubicación; si no, se deja el orden original.
+    setLoading(true);
+    const params = {
+      q: q.trim() || undefined,
+      category: category === "all" ? undefined : category,
+      isOffer: onlyOffers || undefined,
+      limit: 24,
+    };
     if (location) {
-      list.sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
+      params.lat = location.lat;
+      params.lng = location.lng;
     }
-    return list;
-  }, [products, producers, category, onlyOffers, location]);
+    const timeout = setTimeout(() => {
+      searchProducts(params)
+        .then(({ items }) => setResults(items))
+        .finally(() => setLoading(false));
+    }, 300); // debounce simple para no disparar una consulta por cada tecla en "q"
+
+    return () => clearTimeout(timeout);
+  }, [q, category, onlyOffers, location]);
+
+  const items = useMemo(
+    () =>
+      results.map((item) => {
+        const { producer, distanceKm, ...product } = item;
+        return { product, producer, distanceKm: distanceKm ?? null };
+      }),
+    [results],
+  );
 
   return (
     <main className="mx-auto max-w-6xl space-y-6 px-4 py-8">
@@ -62,14 +75,26 @@ export default function CatalogPage() {
         </div>
       )}
 
+      <Input
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        placeholder="Buscar por nombre… (ej: miel, mandioca)"
+        className="max-w-md"
+      />
+
       <FilterBar
         category={category}
         onlyOffers={onlyOffers}
+        categories={meta?.categories ?? []}
         onCategoryChange={setCategory}
         onOnlyOffersChange={setOnlyOffers}
       />
 
-      <CatalogFeed items={items} onSelect={setSelected} />
+      {loading ? (
+        <p className="text-muted-foreground">Cargando…</p>
+      ) : (
+        <CatalogFeed items={items} onSelect={setSelected} />
+      )}
 
       <ProductDetailView item={selected} onClose={() => setSelected(null)} />
     </main>

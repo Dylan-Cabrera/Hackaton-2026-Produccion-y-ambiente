@@ -17,14 +17,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import ToggleOfferSwitch from "@/components/ToggleOfferSwitch";
+import { useMeta } from "@/hooks/useMeta";
 import { createProduct } from "@/lib/api";
-import { CATEGORIES } from "@/lib/constants";
 
 export default function ProductCreateModal({ defaultCategory, onCreated }) {
+  const { meta } = useMeta();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [category, setCategory] = useState(defaultCategory ?? "");
-  const [regularPrice, setRegularPrice] = useState("");
+  const [price, setPrice] = useState("");
   const [stockUnit, setStockUnit] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [isOffer, setIsOffer] = useState(false);
@@ -34,8 +36,8 @@ export default function ProductCreateModal({ defaultCategory, onCreated }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!title.trim() || !category || !regularPrice) {
-      setError("Completá título, categoría y precio.");
+    if (!title.trim() || !price || !stockUnit) {
+      setError("Completá título, precio y unidad de stock.");
       return;
     }
     if (isOffer && !offerPrice) {
@@ -45,21 +47,23 @@ export default function ProductCreateModal({ defaultCategory, onCreated }) {
     setError("");
     setSaving(true);
     try {
-      // offerPrice solo viaja cuando isOffer está activo. El productor dueño
-      // sale de la sesión en el backend, no hace falta mandarlo acá.
+      // El productor dueño sale de la sesión en el backend. Si no elegís
+      // categoría, el backend usa la de tu propio perfil.
       const product = await createProduct({
         title: title.trim(),
-        category,
-        regularPrice: Number(regularPrice),
+        description: description.trim() || undefined,
+        ...(category && { category }),
+        price: Number(price),
         isOffer,
         ...(isOffer ? { offerPrice: Number(offerPrice) } : {}),
-        stockUnit: stockUnit.trim() || undefined,
+        stockUnit,
         imageUrl: imageUrl.trim() || undefined,
       });
       onCreated(product);
       setOpen(false);
       setTitle("");
-      setRegularPrice("");
+      setDescription("");
+      setPrice("");
       setStockUnit("");
       setImageUrl("");
       setIsOffer(false);
@@ -92,13 +96,13 @@ export default function ProductCreateModal({ defaultCategory, onCreated }) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="productCategory">Categoría *</Label>
+            <Label htmlFor="productCategory">Categoría</Label>
             <Select value={category} onValueChange={setCategory}>
               <SelectTrigger id="productCategory">
-                <SelectValue placeholder="Elegí una categoría" />
+                <SelectValue placeholder="Usar el rubro de mi perfil" />
               </SelectTrigger>
               <SelectContent>
-                {CATEGORIES.map((c) => (
+                {(meta?.categories ?? []).map((c) => (
                   <SelectItem key={c} value={c}>
                     {c}
                   </SelectItem>
@@ -109,25 +113,43 @@ export default function ProductCreateModal({ defaultCategory, onCreated }) {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="regularPrice">Precio regular *</Label>
+              <Label htmlFor="price">Precio *</Label>
               <Input
-                id="regularPrice"
+                id="price"
                 type="number"
                 inputMode="numeric"
-                value={regularPrice}
-                onChange={(e) => setRegularPrice(e.target.value)}
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
                 placeholder="1200"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="stockUnit">Stock estimado</Label>
-              <Input
-                id="stockUnit"
-                value={stockUnit}
-                onChange={(e) => setStockUnit(e.target.value)}
-                placeholder="30 kg"
-              />
+              <Label htmlFor="stockUnit">Unidad *</Label>
+              <Select value={stockUnit} onValueChange={setStockUnit}>
+                <SelectTrigger id="stockUnit">
+                  <SelectValue placeholder="Elegí una unidad" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(meta?.stockUnits ?? []).map((u) => (
+                    <SelectItem key={u} value={u}>
+                      {u}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Descripción (opcional)</Label>
+            <textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              maxLength={2000}
+              className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm"
+            />
           </div>
 
           <div className="space-y-2">

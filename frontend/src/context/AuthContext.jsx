@@ -1,50 +1,75 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { getProfile, loginProducer, logoutProducer, registerProducer, updateProducer } from "@/lib/api";
+import {
+  deleteAccount,
+  getProfile,
+  loginAccount,
+  logoutAccount,
+  registerAccount,
+  updateAccount,
+  updateProducerProfile,
+} from "@/lib/api";
 
 const AuthContext = createContext(null);
 
 // status: "loading" (resolviendo sesión) | "authenticated" | "anonymous"
+// user.role: "CONSUMER" | "PRODUCER" | "ADMIN"
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [status, setStatus] = useState("loading");
 
   useEffect(() => {
     getProfile()
-      .then((producer) => {
-        setUser(producer);
-        setStatus(producer ? "authenticated" : "anonymous");
+      .then((account) => {
+        setUser(account);
+        setStatus(account ? "authenticated" : "anonymous");
       })
       .catch(() => setStatus("anonymous"));
   }, []);
 
   async function register(data) {
-    const { producer } = await registerProducer(data);
-    setUser(producer);
+    const { user: account } = await registerAccount(data);
+    setUser(account);
     setStatus("authenticated");
-    return producer;
+    return account;
   }
 
   async function login(email, password) {
-    const { producer } = await loginProducer(email, password);
-    setUser(producer);
+    const { user: account } = await loginAccount(email, password);
+    setUser(account);
     setStatus("authenticated");
-    return producer;
+    return account;
   }
 
   async function logout() {
-    await logoutProducer();
+    await logoutAccount();
     setUser(null);
     setStatus("anonymous");
   }
 
+  // Campos de cuenta (nombre, teléfono, localidad...), válidos para cualquier rol
   async function updateProfile(data) {
-    const producer = await updateProducer(user.id, data);
-    setUser(producer);
-    return producer;
+    const account = await updateAccount(data);
+    setUser(account);
+    return account;
+  }
+
+  // Campos propios del emprendimiento; solo tiene sentido para role === "PRODUCER"
+  async function updateBusinessProfile(data) {
+    const account = await updateProducerProfile(data);
+    setUser(account);
+    return account;
+  }
+
+  async function removeAccount() {
+    await deleteAccount();
+    setUser(null);
+    setStatus("anonymous");
   }
 
   return (
-    <AuthContext.Provider value={{ user, status, register, login, logout, updateProfile }}>
+    <AuthContext.Provider
+      value={{ user, status, register, login, logout, updateProfile, updateBusinessProfile, removeAccount }}
+    >
       {children}
     </AuthContext.Provider>
   );

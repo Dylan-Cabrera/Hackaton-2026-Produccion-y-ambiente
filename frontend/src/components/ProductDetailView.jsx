@@ -1,13 +1,27 @@
+import { useEffect, useState } from "react";
 import { CreditCard, ImageOff, Truck, Zap } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import KmZeroBadge from "@/components/KmZeroBadge";
 import TrustBadge from "@/components/TrustBadge";
 import WhatsAppContactButton from "@/components/WhatsAppContactButton";
+import { getProducer } from "@/lib/api";
 import { formatPrice } from "@/lib/distance";
 
 export default function ProductDetailView({ item, onClose }) {
   const product = item?.product;
-  const producer = item?.producer;
+  const producerSummary = item?.producer;
+  // La búsqueda pública solo trae un resumen del productor (sin métodos de pago
+  // ni entrega); se pide el perfil completo recién al abrir el detalle.
+  const [fullProducer, setFullProducer] = useState(null);
+
+  useEffect(() => {
+    setFullProducer(null);
+    if (producerSummary?.id) {
+      getProducer(producerSummary.id).then(setFullProducer).catch(() => {});
+    }
+  }, [producerSummary?.id]);
+
+  const producer = fullProducer ?? producerSummary;
 
   return (
     <Dialog open={!!item} onOpenChange={(open) => !open && onClose()}>
@@ -44,11 +58,11 @@ export default function ProductDetailView({ item, onClose }) {
 
               <p className="flex items-baseline gap-2">
                 <span className="text-2xl font-bold text-primary">
-                  {formatPrice(product.offerPrice ?? product.regularPrice)}
+                  {formatPrice(product.offerPrice ?? product.price)}
                 </span>
                 {product.isOffer && product.offerPrice && (
                   <span className="text-muted-foreground line-through">
-                    {formatPrice(product.regularPrice)}
+                    {formatPrice(product.price)}
                   </span>
                 )}
                 <span className="text-muted-foreground">· {product.stockUnit}</span>
@@ -66,11 +80,11 @@ export default function ProductDetailView({ item, onClose }) {
                   </div>
                   <p className="flex items-start gap-2 text-muted-foreground">
                     <CreditCard className="mt-0.5 size-4" />
-                    {producer.paymentMethods.join(", ") || "A coordinar"}
+                    {(producer.paymentMethods ?? []).join(", ") || "A coordinar"}
                   </p>
                   <p className="flex items-start gap-2 text-muted-foreground">
                     <Truck className="mt-0.5 size-4" />
-                    {producer.deliveryOptions.join(" · ") || "A coordinar"}
+                    {(producer.deliveryOptions ?? []).join(" · ") || "A coordinar"}
                   </p>
                   <WhatsAppContactButton producer={producer} product={product} />
                 </div>

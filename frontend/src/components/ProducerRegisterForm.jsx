@@ -12,11 +12,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/context/AuthContext";
+import { useMeta } from "@/hooks/useMeta";
 import { useUserLocation } from "@/hooks/useUserLocation";
-import { CATEGORIES, DELIVERY_OPTIONS, PAYMENT_METHODS } from "@/lib/constants";
+import { DELIVERY_OPTIONS, PAYMENT_METHODS } from "@/lib/constants";
 
 export default function ProducerRegisterForm({ onCreated }) {
   const { register } = useAuth();
+  const { meta } = useMeta();
   const { location, status: locationStatus, request: requestLocation } = useUserLocation();
 
   const [businessName, setBusinessName] = useState("");
@@ -25,6 +27,7 @@ export default function ProducerRegisterForm({ onCreated }) {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [locality, setLocality] = useState("");
   const [address, setAddress] = useState("");
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [deliveryOptions, setDeliveryOptions] = useState([]);
@@ -39,29 +42,23 @@ export default function ProducerRegisterForm({ onCreated }) {
     e.preventDefault();
     setError("");
     setFieldErrors({});
-
-    if (!location) {
-      setError("Necesitamos tu ubicación para mostrarte en el mapa. Tocá \"Usar mi ubicación\".");
-      return;
-    }
-
     setSaving(true);
     try {
-      const producer = await register({
+      const account = await register({
+        role: "PRODUCER",
         businessName: businessName.trim(),
         name: name.trim(),
         category,
         phone: phone.trim(),
         email: email.trim(),
         password,
-        location: {
-          address: address.trim(),
-          coordinates: [location.lng, location.lat],
-        },
+        locality,
+        address: address.trim() || undefined,
+        ...(location && { coordinates: [location.lng, location.lat] }),
         paymentMethods,
         deliveryOptions,
       });
-      onCreated(producer);
+      onCreated(account);
     } catch (err) {
       setError(err.message);
       const byField = {};
@@ -107,7 +104,7 @@ export default function ProducerRegisterForm({ onCreated }) {
             <SelectValue placeholder="Elegí tu rubro" />
           </SelectTrigger>
           <SelectContent>
-            {CATEGORIES.map((c) => (
+            {(meta?.categories ?? []).map((c) => (
               <SelectItem key={c} value={c}>
                 {c}
               </SelectItem>
@@ -155,31 +152,44 @@ export default function ProducerRegisterForm({ onCreated }) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="address">Dirección o barrio *</Label>
+        <Label htmlFor="locality">Localidad *</Label>
+        <Select value={locality} onValueChange={setLocality}>
+          <SelectTrigger id="locality">
+            <SelectValue placeholder="Elegí tu localidad" />
+          </SelectTrigger>
+          <SelectContent>
+            {(meta?.localities ?? []).map((l) => (
+              <SelectItem key={l.name} value={l.name}>
+                {l.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {fieldErrors.locality && <p className="text-sm text-destructive">{fieldErrors.locality}</p>}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="address">Dirección o barrio</Label>
         <Input
           id="address"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           placeholder="Colonia Pastoril, Formosa"
         />
-        {fieldErrors["location.address"] && (
-          <p className="text-sm text-destructive">{fieldErrors["location.address"]}</p>
-        )}
+        {fieldErrors.address && <p className="text-sm text-destructive">{fieldErrors.address}</p>}
       </div>
 
       <div className="space-y-2">
         <Button type="button" variant="outline" onClick={requestLocation} className="gap-2">
           <MapPin className="size-4" />
-          {locationStatus === "loading" ? "Buscando ubicación…" : "Usar mi ubicación"}
+          {locationStatus === "loading" ? "Buscando ubicación…" : "Usar mi ubicación exacta"}
         </Button>
+        <p className="text-xs text-muted-foreground">
+          Opcional: si no la das, se usa el centro de tu localidad.
+        </p>
         {locationStatus === "granted" && location && (
           <p className="text-sm text-muted-foreground">
             Ubicación lista ({location.lat.toFixed(4)}, {location.lng.toFixed(4)})
-          </p>
-        )}
-        {locationStatus === "denied" && (
-          <p className="text-sm text-destructive">
-            No pudimos acceder a tu ubicación. Activá el permiso e intentá de nuevo.
           </p>
         )}
       </div>

@@ -12,20 +12,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/context/AuthContext";
+import { useMeta } from "@/hooks/useMeta";
 import { useUserLocation } from "@/hooks/useUserLocation";
-import { CATEGORIES, DELIVERY_OPTIONS, PAYMENT_METHODS } from "@/lib/constants";
+import { DELIVERY_OPTIONS, PAYMENT_METHODS } from "@/lib/constants";
 
-// Edita el perfil del productor logueado. A diferencia del registro, la
-// ubicación es opcional: si no se toca "Actualizar ubicación", se manda la
-// que ya tenía guardada.
+// PUT /api/producers/profile acepta en la misma llamada los campos de cuenta
+// (name, phone, locality, coordinates) y los del emprendimiento.
 export default function ProducerProfileEditForm({ producer, onSaved, onCancel }) {
-  const { updateProfile } = useAuth();
+  const { updateBusinessProfile } = useAuth();
+  const { meta } = useMeta();
   const { location, status: locationStatus, request: requestLocation } = useUserLocation();
 
   const [businessName, setBusinessName] = useState(producer.businessName);
   const [name, setName] = useState(producer.name);
   const [category, setCategory] = useState(producer.category);
   const [phone, setPhone] = useState(producer.phone);
+  const [locality, setLocality] = useState(producer.locality ?? "");
   const [address, setAddress] = useState(producer.address ?? "");
   const [bio, setBio] = useState(producer.bio ?? "");
   const [paymentMethods, setPaymentMethods] = useState(producer.paymentMethods ?? []);
@@ -48,17 +50,18 @@ export default function ProducerProfileEditForm({ producer, onSaved, onCancel })
         name: name.trim(),
         category,
         phone: phone.trim(),
+        locality,
+        address: address.trim(),
         paymentMethods,
         deliveryOptions,
         bio: bio.trim() || null,
       };
-      // Solo se manda location si el usuario pidió actualizar la ubicación
-      // (o cambió la dirección) para no pisar coordenadas buenas con nada.
+      // Solo se manda coordinates si el usuario pidió actualizar la ubicación.
       if (location) {
-        payload.location = { address: address.trim(), coordinates: [location.lng, location.lat] };
+        payload.coordinates = [location.lng, location.lat];
       }
 
-      const updated = await updateProfile(payload);
+      const updated = await updateBusinessProfile(payload);
       onSaved(updated);
     } catch (err) {
       setError(err.message);
@@ -99,7 +102,7 @@ export default function ProducerProfileEditForm({ producer, onSaved, onCancel })
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {CATEGORIES.map((c) => (
+            {(meta?.categories ?? []).map((c) => (
               <SelectItem key={c} value={c}>
                 {c}
               </SelectItem>
@@ -113,6 +116,23 @@ export default function ProducerProfileEditForm({ producer, onSaved, onCancel })
         <Label htmlFor="edit-phone">Teléfono / WhatsApp</Label>
         <Input id="edit-phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
         {fieldErrors.phone && <p className="text-sm text-destructive">{fieldErrors.phone}</p>}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="edit-locality">Localidad</Label>
+        <Select value={locality} onValueChange={setLocality}>
+          <SelectTrigger id="edit-locality">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {(meta?.localities ?? []).map((l) => (
+              <SelectItem key={l.name} value={l.name}>
+                {l.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {fieldErrors.locality && <p className="text-sm text-destructive">{fieldErrors.locality}</p>}
       </div>
 
       <div className="space-y-2">
@@ -134,7 +154,7 @@ export default function ProducerProfileEditForm({ producer, onSaved, onCancel })
         <Input id="edit-address" value={address} onChange={(e) => setAddress(e.target.value)} />
         <Button type="button" variant="outline" size="sm" onClick={requestLocation} className="gap-2">
           <MapPin className="size-4" />
-          {locationStatus === "loading" ? "Buscando…" : "Actualizar ubicación"}
+          {locationStatus === "loading" ? "Buscando…" : "Actualizar ubicación exacta"}
         </Button>
         {location && (
           <p className="text-sm text-muted-foreground">
@@ -142,9 +162,7 @@ export default function ProducerProfileEditForm({ producer, onSaved, onCancel })
             guarda al confirmar.
           </p>
         )}
-        {fieldErrors["location.address"] && (
-          <p className="text-sm text-destructive">{fieldErrors["location.address"]}</p>
-        )}
+        {fieldErrors.address && <p className="text-sm text-destructive">{fieldErrors.address}</p>}
       </div>
 
       <fieldset className="space-y-3">

@@ -6,10 +6,6 @@ import RegisterPage from "@/pages/RegisterPage";
 import LoginPage from "@/pages/LoginPage";
 import MyProductsPage from "@/pages/MyProductsPage";
 import MapPage from "@/pages/MapPage";
-import NeedsPage from "@/pages/NeedsPage";
-import NeedCreatePage from "@/pages/NeedCreatePage";
-import NeedDetailPage from "@/pages/NeedDetailPage";
-import ProducerDemandPage from "@/pages/ProducerDemandPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 
 export default function App() {
@@ -22,10 +18,6 @@ export default function App() {
         <Route path="/registro" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/mis-productos" element={<MyProductsPage />} />
-        <Route path="/necesidades" element={<NeedsPage />} />
-        <Route path="/necesidades/nueva" element={<NeedCreatePage />} />
-        <Route path="/necesidades/:id" element={<NeedDetailPage />} />
-        <Route path="/mi-demanda" element={<ProducerDemandPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </AuthProvider>
