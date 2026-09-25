@@ -1,4 +1,5 @@
 import { WGS84_SRID } from '../constants/catalog.constants.js';
+import { ValidationError } from '../errors/app-error.js';
 import { localityCentroid } from '../utils/geo.js';
 import { CoordinatesTuple, GeoJSONPoint } from '../interfaces/geo.types.js';
 import { RequesterContext } from '../interfaces/need-service.interface.js';
@@ -33,7 +34,7 @@ export class NeedMapper {
   ): NeedPersistenceAttributes {
     const locality = input.locality ?? author.locality;
     if (!locality) {
-      throw new Error('No se pudo determinar la localidad de la necesidad');
+      throw new ValidationError('Necesitás cargar tu localidad en tu perfil antes de publicar una necesidad');
     }
 
     // Las coordenadas del autor solo sirven de default cuando la localidad no cambió;
@@ -42,7 +43,7 @@ export class NeedMapper {
     const coordinates =
       input.coordinates ?? this.resolveCoordinates(locality, useAuthorCoordinates ? author.coordinates : null);
     if (!coordinates) {
-      throw new Error('No se pudo determinar las coordenadas de la necesidad');
+      throw new ValidationError('No se pudo determinar las coordenadas de la necesidad');
     }
 
     return {
