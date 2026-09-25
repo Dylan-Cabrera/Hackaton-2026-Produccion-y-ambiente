@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import B2BSupplyRecommendations from "@/components/B2BSupplyRecommendations";
 import ErrorState from "@/components/ErrorState";
 import KpiCard from "@/components/KpiCard";
 import Skeleton from "@/components/Skeleton";
@@ -153,6 +154,8 @@ export default function ProducerDemandPage() {
           </ul>
         </div>
       )}
+
+      <B2BSupplyRecommendations />
     </main>
   );
 }

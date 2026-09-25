@@ -216,3 +216,10 @@ export async function getMyContactClicksSummary() {
   const res = await request("/api/interactions/contact-click/mine");
   return res.data;
 }
+
+// --- Recomendaciones B2B (HU-05) ---
+
+export async function getB2BRecommendations(radius) {
+  const res = await request(`/api/recommendations/b2b?radius=${radius}`);
+  return res.data;
+}
