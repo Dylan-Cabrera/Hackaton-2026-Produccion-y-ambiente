@@ -5,7 +5,7 @@ import { ProductCardSkeletonGrid } from "@/components/ProductCardSkeleton";
 import ProducerInventoryList from "@/components/ProducerInventoryList";
 import ProducerProfileCard from "@/components/ProducerProfileCard";
 import ProducerProfileEditForm from "@/components/ProducerProfileEditForm";
-import ProductCreateModal from "@/components/ProductCreateModal";
+import ProductFormModal from "@/components/ProductFormModal";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { getMyProducts } from "@/lib/api";
@@ -59,9 +59,10 @@ export default function MyProductsPage() {
             Publicá rápido, marcá los excedentes como oferta y pausá lo que se te acabó.
           </p>
         </div>
-        <ProductCreateModal
+        <ProductFormModal
           defaultCategory={user.category}
-          onCreated={(p) => setProducts((prev) => [p, ...prev])}
+          onSaved={(p) => setProducts((prev) => [p, ...prev])}
+          trigger={<Button size="lg">Publicar producto</Button>}
         />
       </div>
 

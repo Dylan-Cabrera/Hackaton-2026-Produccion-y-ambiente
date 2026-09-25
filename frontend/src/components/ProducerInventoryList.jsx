@@ -1,6 +1,9 @@
 import { useState } from "react";
+import { Pencil } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 import ImageWithFallback from "@/components/ImageWithFallback";
+import ProductFormModal from "@/components/ProductFormModal";
+import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { updateProduct } from "@/lib/api";
 import { formatPrice } from "@/lib/distance";
@@ -50,6 +53,16 @@ export default function ProducerInventoryList({ products, onChange }) {
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
+              <ProductFormModal
+                product={product}
+                onSaved={onChange}
+                trigger={
+                  <Button variant="outline" size="sm" aria-label={`Editar ${product.title}`}>
+                    <Pencil />
+                    <span className="hidden sm:inline">Editar</span>
+                  </Button>
+                }
+              />
               <span className="text-xs text-muted-foreground">
                 {product.available ? "Activo" : "Pausado"}
               </span>
