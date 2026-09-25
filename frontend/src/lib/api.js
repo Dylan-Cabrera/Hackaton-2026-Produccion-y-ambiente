@@ -190,9 +190,11 @@ export async function getMyNeeds() {
   return res.data;
 }
 
+// El backend devuelve { need, matchCount, topMatches } (para poder mostrar los primeros
+// matches apenas se publica); acá se aplana para que el caller solo trabaje con la necesidad.
 export async function createNeed(data) {
   const res = await request("/api/needs", { method: "POST", body: JSON.stringify(data) });
-  return res.data;
+  return { ...res.data.need, matchCount: res.data.matchCount, topMatches: res.data.topMatches };
 }
 
 export async function updateNeedStatus(id, status) {
