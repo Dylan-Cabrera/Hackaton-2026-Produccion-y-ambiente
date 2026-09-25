@@ -29,6 +29,9 @@ export default function SiteNav() {
         <NavLink to="/mapa" className={linkClass}>
           Mapa
         </NavLink>
+        <NavLink to="/necesidades" className={linkClass}>
+          Necesidades
+        </NavLink>
         {status === "authenticated" ? (
           <>
             {user?.role === "PRODUCER" && (

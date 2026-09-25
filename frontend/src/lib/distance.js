@@ -23,6 +23,20 @@ export function daysSince(iso) {
   return Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000));
 }
 
+// El autor de una necesidad puede ser CONSUMER (persona o institución) o
+// PRODUCER: cada rol guarda el "nombre para mostrar" en un lugar distinto.
+export function authorDisplayName(author) {
+  if (author.role === "PRODUCER") return author.producerProfile?.businessName ?? author.name;
+  if (author.accountType === "INSTITUCION") return author.organizationName ?? author.name;
+  return author.name;
+}
+
+export function authorBadgeLabel(author) {
+  if (author.role === "PRODUCER") return "Productor";
+  if (author.accountType === "INSTITUCION") return author.institutionType ?? "Institución";
+  return "Persona";
+}
+
 export function formatPrice(value) {
   return new Intl.NumberFormat("es-AR", {
     style: "currency",

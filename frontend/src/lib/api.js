@@ -169,3 +169,33 @@ export async function updateProduct(id, data) {
   });
   return res.data;
 }
+
+// --- Necesidades ---
+
+export async function getNeeds(params) {
+  const qs = new URLSearchParams();
+  if (params?.category) qs.set("category", params.category);
+  const suffix = qs.toString() ? `?${qs}` : "";
+  const res = await request(`/api/needs${suffix}`);
+  return res.data;
+}
+
+export async function getNeed(id) {
+  const res = await request(`/api/needs/${id}`);
+  return res.data;
+}
+
+export async function getMyNeeds() {
+  const res = await request("/api/needs/mine");
+  return res.data;
+}
+
+export async function createNeed(data) {
+  const res = await request("/api/needs", { method: "POST", body: JSON.stringify(data) });
+  return res.data;
+}
+
+export async function updateNeedStatus(id, status) {
+  const res = await request(`/api/needs/${id}`, { method: "PATCH", body: JSON.stringify({ status }) });
+  return res.data;
+}
