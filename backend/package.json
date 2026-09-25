@@ -8,7 +8,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "seed": "tsx src/scripts/seed-all.ts",
-    "seed:formosa": "tsx src/scripts/seed-formosa.ts"
+    "seed:formosa": "tsx src/scripts/seed-formosa.ts",
+    "seed:100": "tsx src/scripts/seed-100.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
