@@ -24,5 +24,12 @@ export type StockUnit = (typeof STOCK_UNITS)[number];
 export const INSTITUTION_TYPES = ['Comedor', 'Escuela', 'ONG', 'Municipio', 'Comercio', 'Otro'] as const;
 export type InstitutionType = (typeof INSTITUTION_TYPES)[number];
 
+// Frecuencia de una necesidad publicada (HU-11)
+export const NEED_FREQUENCIES = ['UNICA', 'SEMANAL', 'QUINCENAL', 'MENSUAL'] as const;
+export type NeedFrequency = (typeof NEED_FREQUENCIES)[number];
+
+export const NEED_STATUSES = ['OPEN', 'RESOLVED', 'CLOSED'] as const;
+export type NeedStatus = (typeof NEED_STATUSES)[number];
+
 // SRID de WGS 84 (lat/lng estándar de GPS)
 export const WGS84_SRID = 4326;

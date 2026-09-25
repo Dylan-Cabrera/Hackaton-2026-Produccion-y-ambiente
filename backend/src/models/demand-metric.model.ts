@@ -45,12 +45,17 @@ const DemandMetric = sequelize.define(
       allowNull: true,
       references: { model: 'users', key: 'id' }
     },
+    // Necesidad (HU-11) relacionada con el evento, cuando aplica
+    needId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: { model: 'needs', key: 'id' }
+    },
     timestamp: {
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW
     }
-    // needId (FK a `needs.id`) se agrega en HU-11, cuando exista esa tabla
   },
   {
     timestamps: false,

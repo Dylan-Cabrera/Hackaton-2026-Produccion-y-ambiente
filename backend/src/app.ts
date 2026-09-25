@@ -8,6 +8,7 @@ import productRoutes from './routes/product.routes.js';
 import recommendationRoutes from './routes/recommendation.routes.js';
 import telemetryRoutes from './routes/telemetry.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
+import needRoutes from './routes/need.routes.js';
 import metaRoutes from './routes/meta.routes.js';
 import { errorHandler } from './middlewares/error-handler.js';
 
@@ -56,6 +57,9 @@ export const createApp = () => {
 
   // Analítica
   app.use('/api/analytics', analyticsRoutes);
+
+  // Necesidades y matching (HU-11)
+  app.use('/api/needs', needRoutes);
 
   // Catálogos estáticos para el frontend
   app.use('/api/meta', metaRoutes);

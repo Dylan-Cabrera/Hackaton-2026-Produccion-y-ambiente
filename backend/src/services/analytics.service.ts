@@ -2,6 +2,8 @@ import { IAnalyticsService } from '../interfaces/analytics-service.interface.js'
 import { IAnalyticsRepository } from '../interfaces/analytics-repository.interface.js';
 import { IProducerRepository } from '../interfaces/producer-repository.interface.js';
 import { IProductRepository } from '../interfaces/product-repository.interface.js';
+import { INeedRepository } from '../interfaces/need-repository.interface.js';
+import { INeedMatchingService } from '../interfaces/need-matching-service.interface.js';
 import {
   ProducerDemandOptions,
   ProducerDemandResponse,
@@ -10,6 +12,8 @@ import {
   UnmetDemandMapOptions,
   UnmetDemandMapResponse
 } from '../interfaces/analytics.types.js';
+import { UnmetNeed } from '../interfaces/analytics.types.js';
+import { NeedWithAuthorRecord } from '../interfaces/need.types.js';
 import { Category } from '../constants/catalog.constants.js';
 import { NotFoundError } from '../errors/app-error.js';
 
@@ -26,7 +30,9 @@ export class AnalyticsService implements IAnalyticsService {
   constructor(
     private readonly analyticsRepository: IAnalyticsRepository,
     private readonly producerRepository: IProducerRepository,
-    private readonly productRepository: IProductRepository
+    private readonly productRepository: IProductRepository,
+    private readonly needRepository: INeedRepository,
+    private readonly needMatchingService: INeedMatchingService
   ) {}
 
   async getProducerDemand(producerId: number, options: ProducerDemandOptions): Promise<ProducerDemandResponse> {
@@ -39,18 +45,19 @@ export class AnalyticsService implements IAnalyticsService {
     const since = new Date(Date.now() - days * MS_PER_DAY);
     const categories = await this.resolveRelatedCategories(producerId, producer.producerProfile.category);
 
-    const [clicksByLocality, topTerms, totals] = await Promise.all([
+    const [clicksByLocality, topTerms, totals, openNeedsForProducer] = await Promise.all([
       this.analyticsRepository.getClicksByLocality(producerId, since),
       this.analyticsRepository.getTopTerms(categories, since, AnalyticsService.TOP_TERMS_LIMIT),
-      this.analyticsRepository.getTotals(producerId, categories, since)
+      this.analyticsRepository.getTotals(producerId, categories, since),
+      this.needMatchingService.getForProducer(producerId)
     ]);
 
     return {
       days,
       totals: {
         ...totals,
-        // Pendiente (HU-11): necesidades OPEN que el productor podría cubrir
-        openNeedsNearby: 0
+        // Necesidades OPEN que el productor podría cubrir (misma lógica que GET /api/needs/for-me)
+        openNeedsNearby: openNeedsForProducer.length
       },
       clicksByLocality,
       topTerms
@@ -62,14 +69,16 @@ export class AnalyticsService implements IAnalyticsService {
     const days = options.days ?? AnalyticsService.DEFAULT_DAYS;
     const since = new Date(Date.now() - days * MS_PER_DAY);
 
-    const [accountCounts, productCounts, searchStats, producersByCategory, topCategories, topTerms] =
+    const [accountCounts, productCounts, searchStats, producersByCategory, topCategories, topTerms, openNeeds, unmatchedOpenNeeds] =
       await Promise.all([
         this.analyticsRepository.getAccountCounts(),
         this.analyticsRepository.getProductCounts(),
         this.analyticsRepository.getSearchStats(since),
         this.analyticsRepository.getProducersByCategory(),
         this.analyticsRepository.getTopCategoriesBySearches(since, AnalyticsService.TOP_CATEGORIES_LIMIT),
-        this.analyticsRepository.getTopTermsGlobal(since, AnalyticsService.TOP_TERMS_LIMIT)
+        this.analyticsRepository.getTopTermsGlobal(since, AnalyticsService.TOP_TERMS_LIMIT),
+        this.needRepository.countOpen(),
+        this.findOpenNeedsWithoutMatch()
       ]);
 
     const searchFailRate = searchStats.searches > 0 ? Math.round((searchStats.fails / searchStats.searches) * 100) / 100 : 0;
@@ -81,9 +90,8 @@ export class AnalyticsService implements IAnalyticsService {
         searches: searchStats.searches,
         searchFailRate,
         whatsappClicks: searchStats.whatsappClicks,
-        // Pendiente (HU-11): necesidades publicadas
-        openNeeds: 0,
-        needsWithoutMatch: 0
+        openNeeds,
+        needsWithoutMatch: unmatchedOpenNeeds.length
       },
       producersByCategory,
       topCategories,
@@ -96,18 +104,54 @@ export class AnalyticsService implements IAnalyticsService {
     const days = options.days ?? AnalyticsService.DEFAULT_DAYS;
     const since = new Date(Date.now() - days * MS_PER_DAY);
 
-    const [supply, unmetHeat, opportunities] = await Promise.all([
+    const [supply, unmetHeat, opportunities, unmatchedOpenNeeds] = await Promise.all([
       this.analyticsRepository.getSupply(options.category),
       this.analyticsRepository.getUnmetHeat(since, options.category),
-      this.analyticsRepository.getOpportunities(since, options.category, AnalyticsService.OPPORTUNITIES_LIMIT)
+      this.analyticsRepository.getOpportunities(since, options.category, AnalyticsService.OPPORTUNITIES_LIMIT),
+      this.findOpenNeedsWithoutMatch()
     ]);
+
+    const unmetNeeds = unmatchedOpenNeeds
+      .filter((need) => !options.category || need.category === options.category)
+      .map((need) => this.toUnmetNeed(need));
 
     return {
       supply,
       unmetHeat,
-      // Pendiente (HU-11): necesidades OPEN sin matches
-      unmetNeeds: [],
+      unmetNeeds,
       opportunities
+    };
+  }
+
+  // Necesidades OPEN con 0 matches: demanda insatisfecha explícita (más fuerte que una
+  // búsqueda fallida). La usan tanto el resumen provincial como el mapa de vacíos (HU-08).
+  private async findOpenNeedsWithoutMatch(): Promise<NeedWithAuthorRecord[]> {
+    const openNeeds = await this.needRepository.findAllOpenWithAuthor();
+
+    const withMatchCount = await Promise.all(
+      openNeeds.map(async (need) => ({
+        need,
+        total: (await this.needMatchingService.getTopMatchesWithCount(need, 0)).total
+      }))
+    );
+
+    return withMatchCount.filter((entry) => entry.total === 0).map((entry) => entry.need);
+  }
+
+  private toUnmetNeed(need: NeedWithAuthorRecord): UnmetNeed {
+    const [lng, lat] = need.coordinates.coordinates;
+
+    return {
+      id: need.id,
+      title: need.title,
+      category: need.category,
+      quantity: need.quantity,
+      unit: need.unit,
+      frequency: need.frequency,
+      locality: need.locality,
+      lat,
+      lng,
+      authorType: need.author.institutionType ?? need.author.accountType ?? 'Productor'
     };
   }
 
