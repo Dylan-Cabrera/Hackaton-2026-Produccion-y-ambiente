@@ -1,0 +1,57 @@
+import { IAnalyticsService } from '../interfaces/analytics-service.interface.js';
+import { IAnalyticsRepository } from '../interfaces/analytics-repository.interface.js';
+import { IProducerRepository } from '../interfaces/producer-repository.interface.js';
+import { IProductRepository } from '../interfaces/product-repository.interface.js';
+import { ProducerDemandOptions, ProducerDemandResponse } from '../interfaces/analytics.types.js';
+import { Category } from '../constants/catalog.constants.js';
+import { NotFoundError } from '../errors/app-error.js';
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+// Caso de uso "dashboard de demanda del productor": agrega la telemetría de HU-06
+// (clics de WhatsApp, búsquedas relacionadas con su rubro) de los últimos N días.
+export class AnalyticsService implements IAnalyticsService {
+  private static readonly DEFAULT_DAYS = 30;
+  private static readonly TOP_TERMS_LIMIT = 10;
+
+  constructor(
+    private readonly analyticsRepository: IAnalyticsRepository,
+    private readonly producerRepository: IProducerRepository,
+    private readonly productRepository: IProductRepository
+  ) {}
+
+  async getProducerDemand(producerId: number, options: ProducerDemandOptions): Promise<ProducerDemandResponse> {
+    const producer = await this.producerRepository.findById(producerId);
+    if (!producer) {
+      throw new NotFoundError('Perfil de productor no encontrado');
+    }
+
+    const days = options.days ?? AnalyticsService.DEFAULT_DAYS;
+    const since = new Date(Date.now() - days * MS_PER_DAY);
+    const categories = await this.resolveRelatedCategories(producerId, producer.producerProfile.category);
+
+    const [clicksByLocality, topTerms, totals] = await Promise.all([
+      this.analyticsRepository.getClicksByLocality(producerId, since),
+      this.analyticsRepository.getTopTerms(categories, since, AnalyticsService.TOP_TERMS_LIMIT),
+      this.analyticsRepository.getTotals(producerId, categories, since)
+    ]);
+
+    return {
+      days,
+      totals: {
+        ...totals,
+        // Pendiente (HU-11): necesidades OPEN que el productor podría cubrir
+        openNeedsNearby: 0
+      },
+      clicksByLocality,
+      topTerms
+    };
+  }
+
+  // "Mi rubro o una de las categorías de mis productos" (incluye los pausados)
+  private async resolveRelatedCategories(producerId: number, ownCategory: Category): Promise<Category[]> {
+    const products = await this.productRepository.findAllByProducer(producerId);
+    const categories = new Set<Category>([ownCategory, ...products.map((product) => product.category)]);
+    return Array.from(categories);
+  }
+}
