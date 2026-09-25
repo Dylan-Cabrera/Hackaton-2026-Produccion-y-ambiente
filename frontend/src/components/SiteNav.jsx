@@ -28,9 +28,6 @@ export default function SiteNav() {
         <NavLink to="/mapa" className={linkClass}>
           Mapa
         </NavLink>
-        <NavLink to="/tendencias" className={linkClass}>
-          Tendencias
-        </NavLink>
         <NavLink to="/necesidades" className={linkClass}>
           Necesidades
         </NavLink>
@@ -52,9 +49,14 @@ export default function SiteNav() {
               </>
             )}
             {user?.role === "ADMIN" && (
-              <NavLink to="/admin" className={linkClass}>
-                Dashboard
-              </NavLink>
+              <>
+                <NavLink to="/admin" className={linkClass}>
+                  Dashboard
+                </NavLink>
+                <NavLink to="/tendencias" className={linkClass}>
+                  Tendencias
+                </NavLink>
+              </>
             )}
             {user?.role === "CONSUMER" && (
               <NavLink to="/cuenta" className={linkClass}>

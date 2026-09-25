@@ -103,9 +103,8 @@ export class AnalyticsService implements IAnalyticsService {
   }
 
   // Caso de uso "dashboard provincial" (HU-08): panorama agregado de toda la plataforma para el admin.
-  // Caso de uso "tendencias" (público): qué se busca, qué se mira, qué se consulta y qué se pide
-  // en toda la plataforma. Todo agregado: sirve a productores para decidir qué producir y a
-  // compradores para ver qué se mueve, sin exponer la actividad de ninguna persona.
+  // Caso de uso "tendencias" (solo ADMIN): qué se busca, qué se mira, qué se consulta y qué se
+  // pide en toda la plataforma. Todo agregado, sin exponer la actividad de ninguna persona.
   async getTrends(options: TrendsOptions): Promise<TrendsResponse> {
     const days = options.days ?? AnalyticsService.DEFAULT_DAYS;
     const since = new Date(Date.now() - days * MS_PER_DAY);

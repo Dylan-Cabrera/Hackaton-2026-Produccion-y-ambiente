@@ -152,7 +152,7 @@ export interface UnmetDemandMapResponse {
   opportunities: Opportunity[];
 }
 
-// --- GET /api/analytics/trends (público): tendencias generales de toda la plataforma ---
+// --- GET /api/analytics/trends (solo ADMIN): tendencias generales de toda la plataforma ---
 // Solo agregados (conteos por día, rubro, producto, término y localidad), nunca datos por usuario.
 export interface TrendsOptions {
   days?: number;

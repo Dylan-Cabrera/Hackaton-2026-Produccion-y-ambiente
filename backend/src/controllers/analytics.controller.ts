@@ -25,7 +25,7 @@ export class AnalyticsController {
     }
   };
 
-  // GET /api/analytics/trends (público)
+  // GET /api/analytics/trends (solo ADMIN)
   trends = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { days } = req.query;

@@ -25,8 +25,16 @@ router.get(
 // Público: solo datos agregados por celdas de ~2 km y por localidad, nunca eventos individuales
 router.get('/demand-heat', demandHeatValidator, validateRequest, analyticsController.demandHeat);
 
-// Público: tendencias generales, solo conteos agregados (por día, rubro, producto, término y localidad)
-router.get('/trends', trendsValidator, validateRequest, analyticsController.trends);
+// Solo ADMIN: tendencias generales de toda la plataforma (conteos agregados por día, rubro,
+// producto, término y localidad). Incluye visitas y contactos por producto de cada productor.
+router.get(
+  '/trends',
+  authenticateToken,
+  requireRole('ADMIN'),
+  trendsValidator,
+  validateRequest,
+  analyticsController.trends
+);
 
 router.get(
   '/admin-summary',

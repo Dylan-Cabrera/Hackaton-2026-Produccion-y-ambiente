@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Bar,
   BarChart,
@@ -61,10 +61,12 @@ function EmptyChart({ children }) {
   return <p className="py-10 text-center text-sm text-muted-foreground">{children}</p>;
 }
 
-// Tendencias generales de toda la plataforma (público): qué se busca, qué se mira, qué se
-// consulta y qué se pide. Pensado para que un productor decida qué producir o publicar.
+// Tendencias generales de toda la plataforma (solo ADMIN): qué se busca, qué se mira, qué se
+// consulta y qué se pide, para ver dónde falta oferta y qué rubros impulsar.
 export default function TrendsPage() {
-  const { user } = useAuth();
+  const { user, status } = useAuth();
+  const navigate = useNavigate();
+  const isAdmin = status === "authenticated" && user?.role === "ADMIN";
   const [days, setDays] = useState(30);
   const [trends, setTrends] = useState(null);
   const [error, setError] = useState(null);
@@ -74,7 +76,17 @@ export default function TrendsPage() {
     document.title = "Tendencias · Formosa Unida";
   }, []);
 
+  // Sin sesión va al login; con sesión pero sin ser ADMIN, al inicio (igual que el dashboard admin)
   useEffect(() => {
+    if (status === "anonymous") {
+      navigate("/login");
+    } else if (status === "authenticated" && user?.role !== "ADMIN") {
+      navigate("/");
+    }
+  }, [status, user, navigate]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
     let cancelled = false;
     getTrends(days)
       .then((data) => {
@@ -89,9 +101,17 @@ export default function TrendsPage() {
     return () => {
       cancelled = true;
     };
-  }, [days, retryTick]);
+  }, [isAdmin, days, retryTick]);
 
   const loading = !trends || trends.days !== days;
+
+  if (!isAdmin) {
+    return (
+      <main className="mx-auto max-w-6xl px-4 py-12">
+        <p className="text-muted-foreground">Cargando…</p>
+      </main>
+    );
+  }
 
   const periodPicker = (
     <div className="flex gap-1 rounded-lg bg-muted p-1" role="group" aria-label="Período">
@@ -166,7 +186,6 @@ export default function TrendsPage() {
   const productChart = topProducts.map((p) => ({ ...p, name: `${p.title} · ${p.businessName}` }));
   const productLabel = new Map(productChart.map((p) => [p.productId, p.name]));
   const termsChart = topTerms.map((t) => ({ name: t.term, found: t.count - t.fails, notFound: t.fails }));
-  const publishHref = user?.role === "PRODUCER" ? "/mis-productos" : "/registro";
 
   return (
     <main className="mx-auto max-w-6xl space-y-6 px-4 py-8">
@@ -359,12 +378,9 @@ export default function TrendsPage() {
                 Se busca y no se encuentra
               </h2>
               <p className="text-sm text-muted-foreground">
-                Productos que la gente buscó sin encontrar a nadie que los venda. Si los producís, hay demanda esperando.
+                Productos que la gente buscó sin encontrar a nadie que los venda: demanda que hoy no tiene oferta.
               </p>
             </div>
-            <Link to={publishHref} className="text-sm font-semibold text-primary underline underline-offset-4">
-              {user?.role === "PRODUCER" ? "Publicar un producto" : "Sumate como productor"}
-            </Link>
           </div>
           <ul className="flex flex-wrap gap-2">
             {unmetTerms.map((t) => (
