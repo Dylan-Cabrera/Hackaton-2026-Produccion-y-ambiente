@@ -199,3 +199,20 @@ export async function updateNeedStatus(id, status) {
   const res = await request(`/api/needs/${id}`, { method: "PATCH", body: JSON.stringify({ status }) });
   return res.data;
 }
+
+// --- Interacciones (telemetría de contacto) ---
+
+// Se dispara en paralelo, no se espera la respuesta: un fallo acá nunca debe
+// frenar el contacto real por WhatsApp.
+export function trackContactClick(payload) {
+  fetch(`${API_BASE}/api/interactions/contact-click`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  }).catch(() => {});
+}
+
+export async function getMyContactClicksSummary() {
+  const res = await request("/api/interactions/contact-click/mine");
+  return res.data;
+}
