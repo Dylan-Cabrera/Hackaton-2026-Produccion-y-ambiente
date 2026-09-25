@@ -23,18 +23,19 @@ export function daysSince(iso) {
   return Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000));
 }
 
-// El autor de una necesidad puede ser CONSUMER (persona o institución) o
-// PRODUCER: cada rol guarda el "nombre para mostrar" en un lugar distinto.
+// El autor de una necesidad llega ya resuelto desde el backend (NeedAuthorSummary):
+// { id, displayName, accountType, institutionType, locality, phone? }. `displayName`
+// ya es el nombre correcto para cualquier rol (organización, persona o productor).
 export function authorDisplayName(author) {
-  if (author.role === "PRODUCER") return author.producerProfile?.businessName ?? author.name;
-  if (author.accountType === "INSTITUCION") return author.organizationName ?? author.name;
-  return author.name;
+  return author?.displayName ?? "Alguien";
 }
 
+// accountType solo existe para CONSUMER (PERSONA/INSTITUCION); si es null, el autor
+// es un PRODUCER (los productores no tienen accountType).
 export function authorBadgeLabel(author) {
-  if (author.role === "PRODUCER") return "Productor";
-  if (author.accountType === "INSTITUCION") return author.institutionType ?? "Institución";
-  return "Persona";
+  if (author?.accountType === "INSTITUCION") return author.institutionType ?? "Institución";
+  if (author?.accountType === "PERSONA") return "Persona";
+  return "Productor";
 }
 
 export function formatPrice(value) {

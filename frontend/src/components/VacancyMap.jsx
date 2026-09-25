@@ -33,7 +33,7 @@ export default function VacancyMap() {
           }
         }
         setSupply([...byProducer.values()]);
-        setDemand(needs.filter((n) => n.author?.coordinates));
+        setDemand(needs.filter((n) => n.coordinates));
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
@@ -77,7 +77,7 @@ export default function VacancyMap() {
         {demand.map((need) => (
           <CircleMarker
             key={`demand-${need.id}`}
-            center={toLatLng(need.author.coordinates)}
+            center={toLatLng(need.coordinates)}
             radius={7}
             pathOptions={{ color: "#dc2626", fillColor: "#ef4444", fillOpacity: 0.8 }}
           >

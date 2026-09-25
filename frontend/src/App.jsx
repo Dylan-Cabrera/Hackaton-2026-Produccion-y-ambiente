@@ -10,6 +10,7 @@ import MapPage from "@/pages/MapPage";
 import NeedsPage from "@/pages/NeedsPage";
 import NeedCreatePage from "@/pages/NeedCreatePage";
 import NeedDetailPage from "@/pages/NeedDetailPage";
+import ForYouPage from "@/pages/ForYouPage";
 import ProducerDemandPage from "@/pages/ProducerDemandPage";
 import ProducerProfilePage from "@/pages/ProducerProfilePage";
 import AccountPage from "@/pages/AccountPage";
@@ -33,6 +34,7 @@ export default function App() {
           <Route path="/necesidades" element={<NeedsPage />} />
           <Route path="/necesidades/nueva" element={<NeedCreatePage />} />
           <Route path="/necesidades/:id" element={<NeedDetailPage />} />
+          <Route path="/para-vos" element={<ForYouPage />} />
           <Route path="/mi-demanda" element={<ProducerDemandPage />} />
           <Route path="/productores/:id" element={<ProducerProfilePage />} />
           <Route path="/cuenta" element={<AccountPage />} />

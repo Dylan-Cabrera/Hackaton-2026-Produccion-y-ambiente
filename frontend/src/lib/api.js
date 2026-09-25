@@ -200,32 +200,65 @@ export async function updateNeedStatus(id, status) {
   return res.data;
 }
 
-// --- Interacciones (telemetría de contacto) ---
+// --- Interacciones (telemetría de contacto, HU-06) ---
 
 // Se dispara en paralelo, no se espera la respuesta: un fallo acá nunca debe
-// frenar el contacto real por WhatsApp.
-export function trackContactClick(payload) {
-  fetch(`${API_BASE}/api/interactions/contact-click`, {
+// frenar el contacto real por WhatsApp. Usa el endpoint real de telemetría
+// (no existe un endpoint "/interactions" aparte: todo evento de demanda pasa por acá).
+export function trackContactClick({ producerId, productId }) {
+  fetch(`${API_BASE}/api/telemetry/event`, {
     method: "POST",
+    credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ eventType: "WHATSAPP_CLICK", producerId, productId }),
   }).catch(() => {});
-}
-
-export async function getMyContactClicksSummary() {
-  const res = await request("/api/interactions/contact-click/mine");
-  return res.data;
 }
 
 // --- Recomendaciones B2B (HU-05) ---
 
-export async function getB2BRecommendations(radius) {
-  const res = await request(`/api/recommendations/b2b?radius=${radius}`);
+// El backend devuelve { producerCategory, inputs, radiusKm, recommendations: [...] } en
+// forma plana (cada item ya trae su matchedInput); acá se agrupa y se aplana producto+
+// productor para que los componentes no tengan que conocer esa forma cruda.
+export async function getB2BRecommendations(radiusKm) {
+  const res = await request(`/api/recommendations/b2b?radiusKm=${radiusKm}`);
+  const { inputs, recommendations } = res.data;
+
+  const byInput = new Map();
+  for (const rec of recommendations) {
+    const items = byInput.get(rec.matchedInput) ?? [];
+    items.push({ ...rec.product, producer: rec.producer, distanceKm: rec.distanceKm });
+    byInput.set(rec.matchedInput, items);
+  }
+
+  return {
+    matchedInputs: inputs,
+    groups: [...byInput.entries()].map(([matchedInput, items]) => ({ matchedInput, items })),
+  };
+}
+
+// --- Recomendaciones personalizadas (HU-10) ---
+
+export async function getForYouRecommendations(params = {}) {
+  const qs = new URLSearchParams();
+  if (params.lat != null && params.lng != null) {
+    qs.set("lat", params.lat);
+    qs.set("lng", params.lng);
+  }
+  if (params.limit) qs.set("limit", params.limit);
+  const suffix = qs.toString() ? `?${qs}` : "";
+  const res = await request(`/api/recommendations/for-you${suffix}`);
   return res.data;
 }
 
-// --- Analítica (dashboard admin, HU-08) ---
+// --- Analítica ---
 
+// HU-07: dashboard de demanda del propio productor
+export async function getProducerDemand() {
+  const res = await request("/api/analytics/producer-demand");
+  return res.data;
+}
+
+// HU-08: resumen provincial (admin)
 export async function getAdminSummary() {
   const res = await request("/api/analytics/admin-summary");
   return res.data;

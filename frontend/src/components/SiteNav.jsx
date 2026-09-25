@@ -34,6 +34,11 @@ export default function SiteNav() {
         </NavLink>
         {status === "authenticated" ? (
           <>
+            {user?.role !== "ADMIN" && (
+              <NavLink to="/para-vos" className={linkClass}>
+                Para vos
+              </NavLink>
+            )}
             {user?.role === "PRODUCER" && (
               <>
                 <NavLink to="/mis-productos" className={linkClass}>
