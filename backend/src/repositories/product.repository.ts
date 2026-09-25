@@ -127,6 +127,56 @@ export class SequelizeProductRepository implements IProductRepository {
     };
   }
 
+  async findPopular(params: {
+    since: Date;
+    lat?: number;
+    lng?: number;
+    excludeProducerId?: number;
+    limit: number;
+  }): Promise<ProductWithProducerRecord[]> {
+    const where: any[] = [{ available: true }];
+    if (params.excludeProducerId !== undefined) {
+      where.push({ producerId: { [Op.ne]: params.excludeProducerId } });
+    }
+
+    const hasCoords = params.lat !== undefined && params.lng !== undefined;
+    const replacements: Record<string, unknown> = { since: params.since };
+    if (hasCoords) {
+      replacements.lat = params.lat;
+      replacements.lng = params.lng;
+    }
+
+    // Clics de WhatsApp del producto desde `since` (arranque en frío de HU-10)
+    const clicksSql = `(
+      SELECT COUNT(*) FROM demand_metrics dm
+      WHERE dm."productId" = "products"."id" AND dm."eventType" = 'WHATSAPP_CLICK' AND dm."timestamp" >= :since
+    )`;
+
+    const attributesInclude: any[] = [[sequelize.literal(clicksSql), 'clicks']];
+    if (hasCoords) {
+      attributesInclude.push([sequelize.literal(SequelizeProductRepository.DISTANCE_KM_SQL), 'distanceKm']);
+    }
+
+    const rows = await Product.findAll({
+      where: { [Op.and]: where },
+      include: [SequelizeProductRepository.PRODUCER_INCLUDE],
+      attributes: { include: attributesInclude },
+      order: hasCoords
+        ? [
+            [sequelize.literal('"clicks"'), 'DESC'],
+            [sequelize.literal('"distanceKm"'), 'ASC']
+          ]
+        : [
+            [sequelize.literal('"clicks"'), 'DESC'],
+            ['createdAt', 'DESC']
+          ],
+      limit: params.limit,
+      replacements
+    });
+
+    return rows.map((instance) => this.toRecordWithProducer(instance));
+  }
+
   private toRecord(instance: any): ProductRecord {
     return this.mapPlainToRecord(instance.get({ plain: true }));
   }

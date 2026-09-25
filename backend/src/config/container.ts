@@ -16,6 +16,7 @@ import { TelemetryService } from '../services/telemetry.service.js';
 import { AnalyticsService } from '../services/analytics.service.js';
 import { NeedService } from '../services/need.service.js';
 import { NeedMatchingService } from '../services/need-matching.service.js';
+import { PersonalizationService } from '../services/personalization.service.js';
 import { IUserRepository } from '../interfaces/user-repository.interface.js';
 import { IProducerRepository } from '../interfaces/producer-repository.interface.js';
 import { IProductRepository } from '../interfaces/product-repository.interface.js';
@@ -32,6 +33,7 @@ import { ITelemetryService } from '../interfaces/telemetry-service.interface.js'
 import { IAnalyticsService } from '../interfaces/analytics-service.interface.js';
 import { INeedService } from '../interfaces/need-service.interface.js';
 import { INeedMatchingService } from '../interfaces/need-matching-service.interface.js';
+import { IPersonalizationService } from '../interfaces/personalization-service.interface.js';
 
 export const userRepository: IUserRepository = new SequelizeUserRepository();
 export const producerRepository: IProducerRepository = new SequelizeProducerRepository();
@@ -55,6 +57,11 @@ export const needMatchingService: INeedMatchingService = new NeedMatchingService
   productRepository
 );
 export const needService: INeedService = new NeedService(needRepository, userRepository, needMatchingService);
+export const personalizationService: IPersonalizationService = new PersonalizationService(
+  telemetryRepository,
+  productRepository,
+  userRepository
+);
 export const analyticsService: IAnalyticsService = new AnalyticsService(
   analyticsRepository,
   producerRepository,

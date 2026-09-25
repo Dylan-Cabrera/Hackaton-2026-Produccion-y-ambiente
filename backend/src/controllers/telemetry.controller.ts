@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Response, NextFunction } from 'express';
 import { ITelemetryService } from '../interfaces/telemetry-service.interface.js';
 import { telemetryService as defaultTelemetryService } from '../config/container.js';
 import { AuthRequest } from '../middlewares/auth.middleware.js';
@@ -14,5 +14,18 @@ export class TelemetryController {
     await this.telemetryService.recordEvent(req.body, userId);
 
     return res.status(202).end();
+  };
+
+  // DELETE /api/users/me/activity
+  clearActivity = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      await this.telemetryService.clearActivity(req.user!.id);
+
+      return res.status(200).json({
+        message: 'Actividad desvinculada de tu cuenta exitosamente'
+      });
+    } catch (error) {
+      return next(error);
+    }
   };
 }

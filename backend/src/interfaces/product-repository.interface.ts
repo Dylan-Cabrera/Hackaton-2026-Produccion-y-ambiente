@@ -3,6 +3,7 @@ import {
   ProductRecord,
   ProductSearchCriteria,
   ProductSearchResult,
+  ProductWithProducerRecord,
   UpdateProductPersistenceAttributes
 } from './product.types.js';
 
@@ -15,4 +16,14 @@ export interface IProductRepository {
   findAllByProducer(producerId: number, options?: { onlyAvailable?: boolean }): Promise<ProductRecord[]>;
   // Búsqueda pública (HU-03): siempre available=true, incluye datos del productor
   search(criteria: ProductSearchCriteria): Promise<ProductSearchResult>;
+
+  // Arranque en frío de HU-10: productos disponibles con más WHATSAPP_CLICK desde `since`,
+  // priorizando cercanía cuando hay lat/lng
+  findPopular(params: {
+    since: Date;
+    lat?: number;
+    lng?: number;
+    excludeProducerId?: number;
+    limit: number;
+  }): Promise<ProductWithProducerRecord[]>;
 }

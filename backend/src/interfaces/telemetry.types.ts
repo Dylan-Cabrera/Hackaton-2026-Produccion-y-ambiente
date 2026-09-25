@@ -24,3 +24,11 @@ export interface TelemetryEventPersistenceAttributes {
   producerId: number | null;
   userId: number | null;
 }
+
+// Evento propio tal como lo necesita el algoritmo de HU-10 (sin datos de otros usuarios)
+export interface UserTelemetryEvent {
+  eventType: EventType;
+  queryTerm: string | null;
+  category: Category | null;
+  timestamp: Date;
+}

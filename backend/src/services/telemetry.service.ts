@@ -33,6 +33,10 @@ export class TelemetryService implements ITelemetryService {
     }
   }
 
+  async clearActivity(userId: number): Promise<void> {
+    await this.telemetryRepository.clearUserActivity(userId);
+  }
+
   private async resolve(input: TelemetryEventInput): Promise<ResolvedTelemetryContext | null> {
     let category = input.category ?? null;
 
