@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import CatalogFeed from "@/components/CatalogFeed";
 import { ProductCardSkeletonGrid } from "@/components/ProductCardSkeleton";
 import ErrorState from "@/components/ErrorState";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useMeta } from "@/hooks/useMeta";
 import { useUserLocation } from "@/hooks/useUserLocation";
-import { searchProducts } from "@/lib/api";
+import { searchProducts, trackSearch } from "@/lib/api";
 
 export default function CatalogPage() {
   const { meta } = useMeta();
@@ -22,6 +22,8 @@ export default function CatalogPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [retryTick, setRetryTick] = useState(0);
+  // Evita registrar dos veces la misma búsqueda (reintentos, cambio de ubicación)
+  const lastTrackedSearch = useRef("");
 
   useEffect(() => {
     document.title = "Mercado Km 0 · Productores de Formosa";
@@ -44,7 +46,19 @@ export default function CatalogPage() {
     }
     const timeout = setTimeout(() => {
       searchProducts(params)
-        .then(({ items }) => setResults(items))
+        .then(({ items }) => {
+          setResults(items);
+          const term = q.trim();
+          const key = `${term.toLowerCase()}|${category}`;
+          if (term.length >= 2 && key !== lastTrackedSearch.current) {
+            lastTrackedSearch.current = key;
+            trackSearch({
+              queryTerm: term,
+              category: category === "all" ? undefined : category,
+              found: items.length > 0,
+            });
+          }
+        })
         .catch((err) => setError(err.message))
         .finally(() => setLoading(false));
     }, 300); // debounce simple para no disparar una consulta por cada tecla en "q"

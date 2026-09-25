@@ -4,9 +4,10 @@ import { CreditCard, Truck, Zap } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ImageWithFallback from "@/components/ImageWithFallback";
 import KmZeroBadge from "@/components/KmZeroBadge";
+import ProducerLocationMap from "@/components/ProducerLocationMap";
 import TrustBadge from "@/components/TrustBadge";
 import WhatsAppContactButton from "@/components/WhatsAppContactButton";
-import { getProducer } from "@/lib/api";
+import { getProducer, trackProductView } from "@/lib/api";
 import { formatPrice } from "@/lib/distance";
 
 export default function ProductDetailView({ item, onClose }) {
@@ -23,11 +24,21 @@ export default function ProductDetailView({ item, onClose }) {
     }
   }, [producerSummary?.id]);
 
+  // Una visita por cada vez que se abre el detalle (lo cuenta el dashboard del productor)
+  useEffect(() => {
+    if (product?.id) {
+      trackProductView({ productId: product.id, producerId: producerSummary?.id });
+    }
+  }, [product?.id, producerSummary?.id]);
+
   const producer = fullProducer ?? producerSummary;
+  // El resumen de la búsqueda trae `coordinates`; el perfil completo las trae en `location`.
+  const producerCoordinates = producerSummary?.coordinates ?? fullProducer?.location?.coordinates;
+  const producerPlace = fullProducer?.location?.address || producerSummary?.locality;
 
   return (
     <Dialog open={!!item} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] auto-rows-max overflow-y-auto">
         {product && (
           <>
             <DialogHeader>
@@ -44,7 +55,7 @@ export default function ProductDetailView({ item, onClose }) {
                   {product.category}
                 </span>
                 {product.isOffer && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-destructive px-2 py-0.5 text-xs font-semibold text-destructive-foreground">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-offer px-2 py-0.5 text-xs font-semibold text-offer-foreground">
                     <Zap className="size-3" />
                     Oferta Relámpago
                   </span>
@@ -87,6 +98,8 @@ export default function ProductDetailView({ item, onClose }) {
                   <WhatsAppContactButton producer={producer} product={product} />
                 </div>
               )}
+
+              <ProducerLocationMap coordinates={producerCoordinates} label={producerPlace} />
             </div>
           </>
         )}

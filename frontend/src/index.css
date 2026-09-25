@@ -1,13 +1,13 @@
 /* Variables del mapa. Van con prefijo --map- para no pisar el tema de Tailwind (styles.css). */
 :root {
-  --map-color-bg: #f2f5ef;
+  --map-color-bg: #eff3f0;
   --map-color-card: #ffffff;
-  --map-color-primary: #2f6b3a;
-  --map-color-primary-dark: #234f2a;
-  --map-color-text: #1f2a1f;
-  --map-color-muted: #667066;
-  --map-color-border: #e2e7de;
-  --map-radius-lg: 16px;
+  --map-color-primary: #2e7d32;
+  --map-color-primary-dark: #1b5e20;
+  --map-color-text: #1f2a24;
+  --map-color-muted: #71717a;
+  --map-color-border: #e0e6e1;
+  --map-radius-lg: 14px;
   --map-radius-md: 10px;
-  --map-shadow-card: 0 12px 32px rgba(31, 42, 31, 0.08);
+  --map-shadow-card: 0 12px 32px -8px rgba(24, 24, 27, 0.12);
 }

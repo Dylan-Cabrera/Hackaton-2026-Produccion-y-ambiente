@@ -115,7 +115,8 @@
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.6);
 }
 
-.leaflet-container {
+/* Solo el mapa de esta página: este CSS se carga global y pisaba el alto de los otros mapas */
+.map-card .leaflet-container {
   height: 520px;
   width: 100%;
 }
@@ -160,4 +161,85 @@
 
 .map-status.is-error {
   color: #a33636;
+}
+
+/* Selector de capa (demanda / oferta) */
+.map-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.map-layer-toggle {
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: var(--map-radius-md);
+  background: var(--map-color-bg);
+}
+
+.map-layer-toggle button {
+  border: 0;
+  border-radius: 8px;
+  padding: 0.4rem 0.9rem;
+  background: transparent;
+  color: var(--map-color-muted);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.map-layer-toggle button.active {
+  background: var(--map-color-card);
+  color: var(--map-color-primary-dark);
+  box-shadow: 0 1px 2px rgba(24, 24, 27, 0.08);
+}
+
+/* Ranking de localidades bajo el mapa de demanda */
+.map-demand-summary {
+  margin-top: 1rem;
+}
+
+.map-demand-summary h2 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  color: var(--map-color-text);
+}
+
+.map-demand-summary ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.map-demand-summary li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--map-color-border);
+  border-radius: var(--map-radius-md);
+  font-size: 0.875rem;
+  color: var(--map-color-text);
+}
+
+.map-demand-summary li strong {
+  color: #c2410c;
+}
+
+.map-demand-summary p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--map-color-muted);
+}
+
+.map-demand-summary .map-demand-note {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
 }

@@ -1,5 +1,7 @@
 // Backend real (Express + Sequelize + PostGIS) de mi compañero, con roles
 // CONSUMER/PRODUCER/ADMIN y auth por cookie HTTP-Only.
+import { getLastKnownLocation } from "@/hooks/useUserLocation";
+
 export const API_BASE = "http://localhost:3000";
 
 // Envuelve fetch: manda cookies de sesión, tira un Error con status/fieldErrors
@@ -157,6 +159,19 @@ export async function createProduct(data) {
   return res.data;
 }
 
+// Sube una foto del producto y devuelve su URL pública, para mandarla como imageUrl.
+// Va como multipart: se pisa el Content-Type JSON para que el navegador ponga el boundary.
+export async function uploadProductImage(file) {
+  const formData = new FormData();
+  formData.append("image", file);
+  const res = await request("/api/products/upload-image", {
+    method: "POST",
+    headers: {},
+    body: formData,
+  });
+  return res.data.url;
+}
+
 export async function getMyProducts() {
   const res = await request("/api/products/mine");
   return res.data;
@@ -202,18 +217,38 @@ export async function updateNeedStatus(id, status) {
   return res.data;
 }
 
-// --- Interacciones (telemetría de contacto, HU-06) ---
+// --- Interacciones (telemetría de demanda, HU-06) ---
 
-// Se dispara en paralelo, no se espera la respuesta: un fallo acá nunca debe
-// frenar el contacto real por WhatsApp. Usa el endpoint real de telemetría
-// (no existe un endpoint "/interactions" aparte: todo evento de demanda pasa por acá).
-export function trackContactClick({ producerId, productId }) {
+// Se dispara en paralelo, no se espera la respuesta: un fallo acá nunca debe frenar
+// lo que hace el usuario. Todo evento de demanda pasa por el mismo endpoint. Si el usuario
+// dio permiso de ubicación se adjunta (mapa de demanda); si no, el backend usa la de su
+// perfil cuando hay sesión.
+function trackEvent(event) {
+  const location = getLastKnownLocation();
   fetch(`${API_BASE}/api/telemetry/event`, {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ eventType: "WHATSAPP_CLICK", producerId, productId }),
+    body: JSON.stringify({ ...event, ...(location && { lat: location.lat, lng: location.lng }) }),
   }).catch(() => {});
+}
+
+export function trackContactClick({ producerId, productId }) {
+  trackEvent({ eventType: "WHATSAPP_CLICK", producerId, productId });
+}
+
+// Alguien abrió el detalle de un producto: son las "visitas" del dashboard del productor
+export function trackProductView({ producerId, productId }) {
+  trackEvent({ eventType: "PRODUCT_VIEW", producerId, productId });
+}
+
+// Búsqueda en el catálogo: con resultados (SEARCH_HIT) o sin (SEARCH_FAIL, demanda insatisfecha)
+export function trackSearch({ queryTerm, category, found }) {
+  trackEvent({
+    eventType: found ? "SEARCH_HIT" : "SEARCH_FAIL",
+    queryTerm,
+    ...(category && { category }),
+  });
 }
 
 // --- Recomendaciones B2B (HU-05) ---
@@ -255,8 +290,16 @@ export async function getForYouRecommendations(params = {}) {
 // --- Analítica ---
 
 // HU-07: dashboard de demanda del propio productor
-export async function getProducerDemand() {
-  const res = await request("/api/analytics/producer-demand");
+export async function getProducerDemand(days = 30) {
+  const res = await request(`/api/analytics/producer-demand?days=${days}`);
+  return res.data;
+}
+
+// Mapa de demanda público: celdas [lat, lng, peso] + localidades con más demanda
+export async function getDemandHeat({ category, days = 30 } = {}) {
+  const params = new URLSearchParams({ days: String(days) });
+  if (category) params.set("category", category);
+  const res = await request(`/api/analytics/demand-heat?${params}`);
   return res.data;
 }
 
