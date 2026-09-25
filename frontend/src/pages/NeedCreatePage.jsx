@@ -33,7 +33,7 @@ export default function NeedCreatePage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    document.title = "Publicar necesidad · Mercado Km 0";
+    document.title = "Publicar necesidad · Formosa Unida";
   }, []);
 
   // Sin sesión no se puede publicar (HU-11: "Redirige a login").

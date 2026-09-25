@@ -3,7 +3,7 @@ import LoginForm from "@/components/LoginForm";
 
 export default function LoginPage() {
   useEffect(() => {
-    document.title = "Ingresar · Mercado Km 0";
+    document.title = "Ingresar · Formosa Unida";
   }, []);
 
   return (

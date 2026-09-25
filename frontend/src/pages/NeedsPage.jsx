@@ -20,7 +20,7 @@ export default function NeedsPage() {
   const [retryTick, setRetryTick] = useState(0);
 
   useEffect(() => {
-    document.title = "Necesidades · Mercado Km 0";
+    document.title = "Necesidades · Formosa Unida";
   }, []);
 
   useEffect(() => {

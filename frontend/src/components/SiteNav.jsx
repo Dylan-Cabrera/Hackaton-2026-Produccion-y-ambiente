@@ -1,5 +1,4 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Sprout } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 
@@ -19,9 +18,9 @@ export default function SiteNav() {
   return (
     <header className="border-b border-border bg-card">
       <nav className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-4 py-3">
-        <Link to="/" className="mr-auto flex items-center gap-2 font-bold">
-          <Sprout className="size-5 text-primary" />
-          Mercado Km 0
+        <Link to="/" className="mr-auto flex items-center gap-2.5 text-lg font-bold">
+          <img src="/logo-192.png" alt="" className="size-10" />
+          Formosa Unida
         </Link>
         <NavLink to="/" end className={linkClass}>
           Catálogo
